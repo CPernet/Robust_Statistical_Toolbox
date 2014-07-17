@@ -4,8 +4,8 @@ function [h,CI,p] = rst_1ttest(varargin)
 % from zeros.
 %
 % FORMAT
-% [h,CI] = rab_1ttest(data)
-% [h,CI,p] = rab_1ttest(data,'estimator',plot_option,alpha,nboot)
+% [h,CI] = rst_1ttest(data)
+% [h,CI,p] = rst_1ttest(data,'estimator',plot_option,alpha,nboot)
 %
 % INPUTS
 % - data is either a vector or a matrix, in the latter case tests are 
@@ -18,14 +18,14 @@ function [h,CI,p] = rst_1ttest(varargin)
 % - nboot is the number of bootstrap, default = 600
 %
 % OUTPUTS
-% [h,CI] = rab_1ttest(data,'mean')
+% [h,CI] = rst_1ttest(data,'mean')
 % h is the hypothesis that the mean is 0 if h = 0 then this is not
 % significantly different from 0 ; note that if data is a matrix, 
 % a Bonferonni correction is applied for the number of tests (columns)
 % CI are the alpha percent (Bonferoni corrected) confidence intervals used to get h
 %
-% [h,CI,p] = rab_1ttest(data,'median');
-% [h,CI,p] = rab_1ttest(data,'trimmean');
+% [h,CI,p] = rst_1ttest(data,'median');
+% [h,CI,p] = rst_1ttest(data,'trimmean');
 % h is the hypothesis that the median or 20% trimmean is 0 if h = 0 then this is not
 % significantly different from 0 ; note that if data is a matrix, 
 % a Bonferonni correction is applied for the number of tests (columns)
@@ -184,10 +184,10 @@ else
             end
         end
     elseif strcmp(est,'trimmean')
-        M = rab_trimmean(data,trimming); % default here as 20% trimmean
+        M = rst_trimmean(data,trimming); % default here as 20% trimmean
                                % can only be changed by editing argument at the top 
         if p==1 
-                Mb = sort(rab_trimmean(D,trimming));
+                Mb = sort(rst_trimmean(D,trimming));
             if sum(isnan(Mb)) > 0
                 Mb(find(isnan(Mb))) = [];
                 low = round((alphav*length(Mb))/2);
@@ -197,7 +197,7 @@ else
             pb = sum(Mb<0) / length(Mb);
         else
             for c = 1:p
-                Mb = sort(rab_trimmean(D{c},trimming));
+                Mb = sort(rst_trimmean(D{c},trimming));
                 if sum(isnan(Mb)) > 0
                     Mb(find(isnan(Mb))) = [];
                     low = round((alphav*length(Mb))/2);
@@ -254,8 +254,8 @@ if plot_option == 1
             else
                 title(['TrimMeans and ' num2str(100-alphav*100) '% CI'],'FontSize',16); grid on
             end
-            bar([1:size(data,2)],rab_trimmean(data));
-            errorbar([1:size(data,2)],rab_trimmean(data),rab_trimmean(data)-CI(1,:),rab_trimmean(data)+CI(2,:),'r','LineWidth',2);
+            bar([1:size(data,2)],rst_trimmean(data));
+            errorbar([1:size(data,2)],rst_trimmean(data),rst_trimmean(data)-CI(1,:),rst_trimmean(data)+CI(2,:),'r','LineWidth',2);
             
         end
     end

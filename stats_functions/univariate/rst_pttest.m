@@ -4,8 +4,8 @@ function [h,CI,p] = rst_pttest(varargin)
 % difference between pairs differs from zeros.
 %
 % FORMAT
-% [h,CI] = rab_pttest(X,Y)
-% [h,CI,p] = rab_pttest(X,Y,estimator,plot_option,alpha,nboot)
+% [h,CI] = rst_pttest(X,Y)
+% [h,CI,p] = rst_pttest(X,Y,estimator,plot_option,alpha,nboot)
 %
 % INPUTS
 % - X,Y are either vectors or a matrices, in the latter case pairs are
@@ -18,15 +18,15 @@ function [h,CI,p] = rst_pttest(varargin)
 % - nboot is the number of bootstrap, default = 600
 %
 % OUTPUTS
-% [h,CI] = rab_pttest(X,Y,'mean')
+% [h,CI] = rst_pttest(X,Y,'mean')
 % h is the hypothesis that the mean difference is 0 if h = 0 then this is not
 % significantly different from 0, i.e. pairs are not different 
 % note that if X and Y are matrices, a Bonferonni correction is applied for the number
 % of tests (columns)
 % CI are the alpha percent (Bonferoni corrected) confidence intervals used to get h
 %
-% [h,CI,p] = rab_pttest(data,'median');
-% [h,CI,p] = rab_ptest(data,'trimmean');
+% [h,CI,p] = rst_pttest(data,'median');
+% [h,CI,p] = rst_ptest(data,'trimmean');
 % h is the hypothesis that the median difference or 20% trimmean difference is 0 
 % if h = 0 then this is not significantly different from 0, i.e. pairs do not differ 
 % note that if X and Y are matrices, a Bonferonni correction is applied for the number
@@ -85,14 +85,14 @@ end
 alphav = alphav / p; % Bonferoni adjustment
 
 
-%% compute the difference(s) and call rab_1ttest
+%% compute the difference(s) and call rst_1ttest
 data = X-Y;
 if strcmp(est,'mean')
-    [h,CI,p] = rab_1ttest(data,'mean',0,alphav,nboot);
+    [h,CI,p] = rst_1ttest(data,'mean',0,alphav,nboot);
 elseif strcmp(est,'trimmean')
-    [h,CI,p] = rab_1ttest(data,'trimmean',0,alphav,nboot);
+    [h,CI,p] = rst_1ttest(data,'trimmean',0,alphav,nboot);
 else
-    [h,CI,p] = rab_1ttest(data,'median',0,alphav,nboot);
+    [h,CI,p] = rst_1ttest(data,'median',0,alphav,nboot);
 end
  
 %% plot
@@ -127,8 +127,8 @@ if plot_option == 1
             else
                 title(['TrimMeans and ' num2str(100-alphav*100) '% CI'],'FontSize',16); grid on
             end
-            bar([1:size(data,2)],rab_trimmean(data));
-            errorbar([1:size(data,2)],rab_trimmean(data),rab_trimmean(data)-CI(1,:),rab_trimmean(data)-CI(2,:),'r','LineWidth',2);
+            bar([1:size(data,2)],rst_trimmean(data));
+            errorbar([1:size(data,2)],rst_trimmean(data),rst_trimmean(data)-CI(1,:),rst_trimmean(data)-CI(2,:),'r','LineWidth',2);
         end
     end
         
