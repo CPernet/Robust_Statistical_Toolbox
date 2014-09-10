@@ -4,14 +4,14 @@ function [h,M,CI,p] = rst_2ttest(varargin)
 % difference of the estimators
 %
 % FORMAT
-% [h,M,CI] = rab_2ttest(X,Y)
-% [h,M,CI,p] = rab_2ttest(X,Y,'estimator',plot_option,alpha,nboot)
+% [h,M,CI] = rst_2ttest(X,Y)
+% [h,M,CI,p] = rst_2ttest(X,Y,'estimator',alpha,plot_option,nboot)
 %
 % INPUTS
 % - X and Y are a n-by-p matrix, if p>1 the test is computed for successive columns 
 % and resampling is identical in each column
 % - estimator = 'mean' or 'median' or 'trimmean'
-% - plot_option indicates to plot the result (1 - default) or not (0)
+% - plot_option indicates to plot the result (1) or not (0 - default)
 % - alpha is the alpha level, default = 5%
 % - nboot is the number of bootstrap, default = 600
 %
@@ -33,14 +33,15 @@ function [h,M,CI,p] = rst_2ttest(varargin)
 % p are the p values
 %
 % Cyril Pernet - v1 - April 2012
-% -------------------------------
+% ----------------------------------------------------------------------
+% Copyright (C) RST Toolbox Team 2014
 
 %% check arguments
 est = 'trimmean';
 trimming = 20/100; % amount of trimming
 alphav = 5/100;
 nboot = 600;
-plot_option = 1;
+plot_option = 0;
 X = varargin{1};
 Y = varargin{2};
  
@@ -60,8 +61,8 @@ if nargin>=2 && nargin<7
         error('unknown estimator name')
     end
     
-    if nargin >= 4; plot_option = varargin{4}; end
-    if nargin >= 5; alphav = varargin{5}; end
+    if nargin >= 4; alphav = varargin{4}; end
+    if nargin >= 5; plot_option = varargin{5}; end
     if ~isnumeric(alphav)
         error('alphav must be a numeric')
     elseif alphav > 1
@@ -71,6 +72,8 @@ if nargin>=2 && nargin<7
     if nargin == 6; nboot = varargin{6}; end
     if ~isnumeric(nboot)
         error('nboot must be a numeric')
+    elseif nboot < 600
+        error('the number of bootstraps is too small')
     end
 else
     error('wrong number of arguments')

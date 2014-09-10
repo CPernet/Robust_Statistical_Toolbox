@@ -33,7 +33,9 @@ function [h,CI,p] = rst_1ttest(varargin)
 % CI are the alpha percent (Bonferoni corrected) confidence intervals
 %
 % Cyril Pernet - v1 - March 2012
-% -------------------------------
+% ----------------------------------------------------------------------
+% Copyright (C) RST Toolbox Team 2014
+
 
 %% check arguments
 est = 'trimmean';
@@ -219,9 +221,9 @@ else
             h(c) = p(c)<= (alphav/2);
         end
     end
-    
-
 end
+
+h = logical(h);
     
 if plot_option == 1
     if strcmp(est,'mean')

@@ -1,27 +1,27 @@
 function [TM,CI] = rst_trimmean(varargin)
 
-% simple routine to compute the X percent trimmean of the data
-% also returns the 95% confidence interval of the trimmean
+% This function computes the X percent trimmed mean of the data.
+% It also returns the 95% confidence interval of the trimmed mean.
 % 
 % FORMAT
-% [TM,CI] = rab_trimmean(data,percent)
+% [TM,CI] = rst_trimmean(data,percent)
 %
 % INPUT
-% data is a vector or a matrix
+% data is a vector or a matrix (also accept NaN)
 % percent is the amount trimmed each side of data (default = 20%)
 %
 % OUTPUT
-% TM is the trimmean value(s) of data taken column-wise
+% TM is the trimmed mean value(s) of data taken column-wise
 % CI is the 95% confidence interval
 %
-% the trimmean is the mean of the data excluding the highest and lowest
+% the trimmed mean is the mean of the data excluding the highest and lowest
 % K data values (K=round(N*percent)) and N is the number of values
 % in data) - see e.g. Wilcox, Rand R. "Introduction to Robust Estimation
 % and Hypothesis Testing." New York: Academic Press. 2005.
 %
 % Cyril Pernet v1 - April 2012
-% -----------------------------
-%  Copyright (C) RAB Team 2012
+% -------------------------------------------------------------------------
+% Copyright (C) RST Toolbox Team 2014
 
 %% check arguments and data
 

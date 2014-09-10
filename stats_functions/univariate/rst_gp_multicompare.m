@@ -3,10 +3,10 @@ function [difference,CI,h]=rst_gp_multicompare(gp1,gp2,flag)
 % Test for mean differences between groups with an adjustment for
 % multiple comparisons using thr max under H0
 %
-% FORMAT [difference,CI,h]=rab_gp_multicompare(gp1,gp2,flag)
+% FORMAT [difference,CI,h]=rst_gp_multicompare(gp1,gp2,flag)
 %
-% INPUT gp1 and gp2 are 2 matrices n*p and m*p with p the conditions to
-%       compare - 
+% INPUT gp1 and gp2 are 2 matrices n*p and m*p with p the conditions to 
+%       compare column-wise 
 %       flag - indicates to make a figure or not
 %
 % OUTPUT difference is the mean difference
@@ -14,6 +14,8 @@ function [difference,CI,h]=rst_gp_multicompare(gp1,gp2,flag)
 %        h hypothesis testing
 %
 % Cyril Pernet 
+% ----------------------------------------------------------------------
+% Copyright (C) RST Toolbox Team 2014
 
 nboot = 1000;
 alpha = 5/100;
@@ -42,8 +44,8 @@ end
 
 means_gp1 = squeeze(nanmean(boot_gp1,1)); % means over resampled subjects
 means_gp2 = squeeze(nanmean(boot_gp2,1));
-boot_means1 = mean(nanmeans_gp1,2); % means over all bootstrap
-boot_means2 = mean(nanmeans_gp2,2);
+boot_means1 = mean(means_gp1,2); % means over all bootstrap
+boot_means2 = mean(means_gp2,2);
 Tau1 = (1/(nboot-1))*sum((means_gp1-boot_means1(:,ones(1,nboot))).^2,2); % standard error of each condition
 Tau2 = (1/(nboot-1))*sum((means_gp2-boot_means2(:,ones(1,nboot))).^2,2);
 H = abs(means_gp1 - means_gp2 - repmat((boot_means1-boot_means2),1,nboot)) ...

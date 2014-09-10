@@ -1,4 +1,5 @@
 function [xhd CI] = rst_hdci(x,nboot,plotCI)
+
 % [xhd CI] = hdci(x,nboot,plotCI)
 % HDCI computes the 95% confidence interval 
 % for the deciles of a distribution

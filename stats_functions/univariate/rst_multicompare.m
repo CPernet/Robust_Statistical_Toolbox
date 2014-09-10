@@ -1,10 +1,11 @@
 function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alpha,est,newfig,plothist)
 
 % performs multiple comparisons between pairs based on
-% a percentile bootstrap on differences.
+% a percentile bootstrap on differences - alpha is adjusted to control the
+% type 1 error rate.
 %
 % FORMAT
-% [diff,CI_boot,p,h]= rab_multicompare(Data,pairs,alpha,est,newfig,plothist)
+% [diff,CI_boot,p,h]= rst_multicompare(Data,pairs,alpha,est,newfig,plothist)
 %
 % INPUT
 % Data     = 2D matrix (n*p) of repeated measures
@@ -27,6 +28,9 @@ function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alpha,est,newfig,plot
 % Press, San Diego, CA, USA.
 %
 % Cyril Pernet 16-08-2011
+% ----------------------------------------------------------------------
+% Copyright (C) RST Toolbox Team 2014
+
 
 %% inputs
 
