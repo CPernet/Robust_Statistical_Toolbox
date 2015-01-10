@@ -1,15 +1,22 @@
 function [class,distance] = rst_outlier(data,method)
 
-% Allows to detect outliers following 3 different methods
-% Method 1 - is the standard MAD Median rule
-% Method 2 - is the MAD Median rule with adustement for small samples
-% Method 3 - is the S-outlier method
+% Allows to detect outliers 
+%
+% FORMAT [class,distance] = rst_outlier(data,method)
+%
+% IMPUT data a vector of data points
+%       method = 1 - is the standard MAD Median rule
+%              = 2 - is the MAD Median rule with adustement for small samples
+%              = 3 - is the S-outlier method
+%
+% OUTPUT class is a binary vector indicating outliers
+%        distance is a metric reporting the relative distance of each data point
 %
 % Methods 1/2 - this is similar, in spirit, to reject data points located above 2
 % standard deviations - however, using std is biased because by definition
 % the mean and the std are affected by the outlier(s); instead one rely on
 % the median and the deviation to the median (mad). We then apply a
-% consistency factor so the the mad estimates the std and find the outliers
+% consistency factor so the mad estimates the std and find the outliers
 % as data points above a given limit (the 75th quantile of the
 % distribution)
 %

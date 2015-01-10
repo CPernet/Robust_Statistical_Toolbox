@@ -38,7 +38,7 @@ h = x(2) - x(1);
 
 % plot
 if nargout == 0
-    figure; set(gcf,'Color','w');
+    % figure; set(gcf,'Color','w');
     bar(x,nu/(length(data)*h),1,'FaceColor',[0.5 0.5 1]);
     grid on; hold on; % axis('tight');
     plot(xp,yp,'r','LineWidth',3);

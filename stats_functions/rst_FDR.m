@@ -9,7 +9,7 @@ function [pID,pN] = rst_FDR(p,alpha)
 % Based on FDR.m     1.4 Tom Nichols 02/07/02
 % short coded by C. Pernet.
 
-
+p(isnan(p)) = [];
 p = sort(p(:));
 V = length(p);
 I = (1:V)';

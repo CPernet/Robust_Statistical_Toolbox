@@ -40,9 +40,6 @@ function [Chi2,pval,effect_size]=rst_independence(X,Y,test)
 % The null hypothesis is that the occurrence of the observed
 % outcomes are independent, ie each cell as a frequency of (colunn*row)/total
 % The Chi-square stat is the sum of (Observed-Expected)^2 / Expected over each cells
-% For permutation testing, since under the null all cells are equal, the classes
-% are ramdomly assigned a 1000 times and distribution obtained. The p value
-% is 2*(1-number of times the observed Chi^2 above the alpha quantile)
 % Significance indicates that the 2 variables are associated
 % Ref Yates, F (1934). "Contingency table involving small numbers and the ?2 test". 
 % Supplement to the Journal of the Royal Statistical Society 1(2): 217–235
@@ -70,33 +67,12 @@ if n2==1 && p2>1
     [n2,p2]=size(Y);
 end
 
-if n1~=n2
-    error('the number of observations is not the same for X and Y')
-end
-
 if (~strcmp(lower(test),'mcnemar') .* ~strcmp(lower(test),'pearson'))
     error('test name unrecognized: use McNemar or Pearson')
 end
 
-%% Make the contingency table
-a = sum((X+Y)==2); % success for X and Y
-b = length(intersect(find(X==0),find(Y==1))); % failure for X and success for Y
-c = length(intersect(find(X==1),find(Y==0))); % success for X and failure for Y
-d = sum((X+Y)==0); % failure for X and Y
-
-% display in the command window
-disp('-------------------------------------------------------')
-disp('                 |                X                   |')
-disp('                 |    success          failure        |')
-disp('-------------------------------------------------------')
-fprintf('      success    |      %g                %g            |\n',a,b)
-disp('  Y              |                                    |')
-fprintf('      failure    |      %g                %g            |\n',c,d)
-disp('-------------------------------------------------------')
-
-% quick check
-if a+b+c+d ~= n1
-    error('something went wrong, the sum of cells does not sum to N')
+if strcmp(lower(test),'mcnemar') && n1~=n2
+    error('the number of observations is not the same for X and Y')
 end
 
 
@@ -104,48 +80,119 @@ switch lower(test)
     
 %% McNemar test
     case {'mcnemar'}
+  
+        % Make the contingency table
+        a = sum((X+Y)==2); % success for X and Y
+        b = length(intersect(find(X==0),find(Y==1))); % failure for X and success for Y
+        c = length(intersect(find(X==1),find(Y==0))); % success for X and failure for Y
+        d = sum((X+Y)==0); % failure for X and Y
         
-        Chi2 = ((b-c)^2) / (b+c);
-        % pval = min(1,2*min(binocdf(b,(b+c),0.5),1-binocdf(b,(b+c),0.5))); % central Fisher’s exact test
-        pval = min(1,2*min(1-binocdf(b,(b+c),0.5)));
-        
-        % odd ratio and 95% CI
-        if nargout == 3
-            effect_size.phi = b / c;  % odd ratio
+        % display in the command window
+        disp('-------------------------------------------------------')
+        disp('                 |                X                   |')
+        disp('                 |    success          failure        |')
+        disp('-------------------------------------------------------')
+        fprintf('      success    |      %g                %g            |\n',a,b)
+        disp('  Y              |                                    |')
+        fprintf('      failure    |      %g                %g            |\n',c,d)
+        disp('-------------------------------------------------------')
+
+        % quick check since these are paired daya
+        if a+b+c+d ~= n1
+            error('something went wrong, the sum of cells does not sum to N')
+        elseif b==0 && c==0
+                disp('no discordance - Chi^2 = 0 p=0')
+                Chi2=0; p=0;
+       else
+            % the old fashion way is
+            % Chi2 = ((abs(b-c)-0.5)^2) / (b+c); % Yates's correction for continuity
+            % pval = 1 - chi2cdf(Chi2,1);
+            
+            % but really we can just use Fisher exact test (binomial)
+            % pval = min(1,2*min(1-binocdf(b,(b+c),0.5)));  
+            Chi2 = ((b-c)^2) / (b+c);
+            % central Fisher’s exact test, Fay,(2010)
+            pval = min(1,2*min(binocdf(b,(b+c),0.5),1-binocdf(b,(b+c),0.5))); 
+            if b ~=0 && c==0
+                 pval = 1; % - chi2cdf(Chi2,1);
+            end
+            
+            % odd ratio
+            if nargout == 3
+                effect_size.phi = b / c;
+                effect_size.odd_ratio  = (a*d) / (b*c);
+            end
+            
         end
+               
         
 %% Pearson test
         
     case {'pearson'}
         
+        % Make the contingency table
+        a = sum(X); % success for X 
+        b = sum(~X); % failure for X 
+        c = sum(Y); % success for Y
+        d = sum(~Y); % failure Y
+        
+        % display in the command window
+        disp('-------------------------------------------------------')
+        disp('                 |                X                   |')
+        disp('                 |    success          failure        |')
+        disp('-------------------------------------------------------')
+        fprintf('      success    |      %g                %g            |\n',a,b)
+        disp('  Y              |                                    |')
+        fprintf('      failure    |      %g                %g            |\n',c,d)
+        disp('-------------------------------------------------------')
+
         % marginal values
-        row1 = a+b; row2 = c+d; column1 = a+c; column2 = b+d;
-         
+        row1 = a+b; row2 = c+d; 
+        column1 = a+c; column2 = b+d;
+        N = a+b+c+d;
+        
         if a>5 && b>5 && c>5 && d>5
             
             % compute the expected counts from marginal data
-            expected(1) = row1*column1/n1;
-            expected(2) = row1*column2/n1;
-            expected(3) = row2*column1/n1;
-            expected(4) = row2*column2/n1;
+            expected(1) = row1*column1/N;
+            expected(2) = row1*column2/N;
+            expected(3) = row2*column1/N;
+            expected(4) = row2*column2/N;
             
             % Chi^2
             Chi2 = ((a-expected(1))^2) / expected(1) + ...
                 ((b-expected(2))^2) / expected(2) + ...
                 ((c-expected(3))^2) / expected(3) + ...
                 ((d-expected(4))^2) / expected(4);
-           pval = 1 -chi2cdf(Chi2,1);
-           
+            
         else % apply Yates correction
             % (http://en.wikipedia.org/wiki/Yates%27s_correction_for_continuity)
-            
-            Chi2 = (n1*(max(0,(abs(a*b-b*c)-n1/2)))^2) / (row1*row2*column1*column2);
-            pval = 2*(1-binocdf(b,(b+c),0.5)); % Fisher exact test
-            
+            disp('Yates correction applied')
+            Chi2 = (N*(max(0,(abs(a*d-b*c)-N/2)))^2) / (row1*row2*column1*column2);
         end
         
+        % p-value
+        % an approximation is 
+        pval.Chi = 1 -chi2cdf(Chi2,1);
+        
+        % but we use here the Fisher exact test (which actually doesn't
+        % need the Chi^2 value - but we provide it for reference
+        % http://en.wikipedia.org/wiki/Fisher%27s_exact_test - one sided
+        Fisher = (factorial(row1)*factorial(row2)*factorial(column1)*factorial(column2)) / (factorial(a)*factorial(b)*factorial(c)*factorial(d)*factorial(N));
+        
+        % from there we need a 2 sided test, by summing all probabilities
+        % from the hypergeometric distribution - we can use hygecdf()
+        D = 1+min([row1 row2 column1 column2]); 
+        for i=0:D
+            tmp(i+1) = hygecdf(i,N,row1,column1);
+        end
+        prob = single(diff(tmp));
+        indices = prob<= Fisher;
+        pval.Fisher = sum(prob(indices));
+                
         if nargout == 3
-            effect_size.phi = Chi2 / n1;
+            effect_size.phi = sqrt(Chi2 / N);
+            effect_size.odd_ratio  = (a*d) / (b*c);
         end
         
 end

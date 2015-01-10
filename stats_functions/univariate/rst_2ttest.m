@@ -16,15 +16,15 @@ function [h,M,CI,p] = rst_2ttest(varargin)
 % - nboot is the number of bootstrap, default = 600
 %
 % OUTPUTS
-% [h,M,CI] = rab_1ttest(X,Y,'mean')
+% [h,M,CI] = rst_1ttest(X,Y,'mean')
 % h is the hypothesis that the mean is 0 if h = 0 then this is not
 % significantly different from 0 ; note that if data is a matrix, 
 % a Bonferonni correction is applied for the number of tests (columns)
 % M is the mean difference
 % CI are the alpha percent (Bonferoni corrected) confidence intervals used to get h
 %
-% [h,M,CI,p] = rab_1ttest(X,Y,'median');
-% [h,M,CI,p] = rab_1ttest(X,Y,'trimmean');
+% [h,M,CI,p] = rst_1ttest(X,Y,'median');
+% [h,M,CI,p] = rst_1ttest(X,Y,'trimmean');
 % h is the hypothesis that the median or 20% trimmean is 0 if h = 0 then this is not
 % significantly different from 0 ; note that if data is a matrix, 
 % a Bonferonni correction is applied for the number of tests (columns)
@@ -106,7 +106,7 @@ if strcmp(est,'mean')
 elseif strcmp(est,'median')
     M = nanmedian(X,1) - nanmedian(Y,1);
 elseif strcmp(est,'trimmean')
-    M = rab_trimmean(X,trimming)- rab_trimmean(Y,trimming);
+    M = rst_trimmean(X,trimming)- rst_trimmean(Y,trimming);
 end
 
 for c=1:size(X,2)
@@ -115,7 +115,7 @@ for c=1:size(X,2)
     elseif strcmp(est,'median')
         m{c} = sort(nanmedian(data1{c},1) - nanmedian(data2{c},1));
     elseif strcmp(est,'trimmean')
-        m{c} = sort(rab_trimmean(data1{c},trimming)- rab_trimmean(data2{c},trimming));
+        m{c} = sort(rst_trimmean(data1{c},trimming)- rst_trimmean(data2{c},trimming));
     end
     
     CI(1,c) = m{c}(low);

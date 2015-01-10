@@ -1,8 +1,7 @@
 function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alpha,est,newfig,plothist)
 
-% performs multiple comparisons between pairs based on
-% a percentile bootstrap on differences - alpha is adjusted to control the
-% type 1 error rate.
+% performs multiple comparisons between pairs based on a percentile bootstrap
+% on differences - alpha is adjusted to control the type 1 error rate.
 %
 % FORMAT
 % [diff,CI_boot,p,h]= rst_multicompare(Data,pairs,alpha,est,newfig,plothist)
@@ -25,7 +24,12 @@ function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alpha,est,newfig,plot
 %
 % Multiple comparisons are computed as described in Wilcox, R.R. (2005)
 % Robust Estimation and Hypothesis Testing (2nd Ed). Elsevier, Academic
-% Press, San Diego, CA, USA.
+% Press, San Diego, CA, USA. If N<80 and less than 10 pairs are tested, the
+% alpha value is set a priori based on simulation results. If N<80 and more
+% then 10 pairs are tested, alpha is Bonferroni corrected. If N>80, alpha
+% is adjusted using Hochberg step-up procedure. Overview of these
+% procedures, and others, can be found at 
+% http://en.wikipedia.org/wiki/Familywise_error_rate
 %
 % Cyril Pernet 16-08-2011
 % ----------------------------------------------------------------------
@@ -71,7 +75,7 @@ L = length(all_pairs);
 % -------------------
 if n < 80 % small sample size, method SR
     if L>10
-        alphac = alpha / L;
+        alpha = alpha / L;
     else
         test(1) = (alpha ~= .05);
         test(2) = (alpha ~= .01);

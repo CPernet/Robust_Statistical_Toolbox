@@ -68,13 +68,15 @@ for i=1:N
     n=length(x); % number of subjects
     boot = zeros(1,nboot);
     % make a resampling table with at least 2 different values
-    table = NaN(n,nboot);
-    for b=1:nboot
+    table = NaN(n,nboot); b = 1;
+    while b<nboot+1
         tmp = randi(n,[n,1]);
         if length(unique(tmp))>=2
             table(:,b) = tmp;
+            b = b +1;
         end
     end
+    
     % simply compute
     if strcmp(lower(est),'harrell-davis')
         boot= rst_hd(x(table),q);
@@ -83,8 +85,8 @@ for i=1:N
     elseif strcmp(lower(est),'median')
         boot= median(x(table));
     elseif strcmp(lower(est),'mean')
-        boot= mean(x(table));
-    end
+            boot= mean(x(table));
+    end  
     
     % We estimate the standard error of the est statistic by the standard
     % deviation of the bootstrap replications - Efron & Tibshinari 1993, chapter 6

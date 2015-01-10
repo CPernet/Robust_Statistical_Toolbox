@@ -2,7 +2,7 @@ function rst_boxplot(varargin)
 
 % routine to make box plots specifying several parameters for display
 %
-% FORMAT better_boxplot(data,linewidth,boxcolors,boxfillcolors)
+% FORMAT rst_boxplot(data,linewidth,boxcolors,boxfillcolors)
 %
 % INPUT data a matrix of data to plot using box plot
 %       linewidth the thickness of box and wisker lines
@@ -13,11 +13,19 @@ function rst_boxplot(varargin)
 
 data = varargin{1};
 linewidth = varargin{2};
-boxcolors = varargin{3};
+
+if nargin == 3
+    boxcolors = varargin{3};
+else
+    tmp = jet; % close(gcf)
+    boxcolors = tmp(1:floor(64/size(data,2)):64,:);
+    clear tmp
+end
+
 if nargin == 4
     boxfillcolors = flipud(varargin{4});
 else
-    boxfillcolors = flipud(varargin{3});
+    boxfillcolors = flipud(boxcolors);
 end
  
 
