@@ -200,7 +200,7 @@ end
 % additional plots?
 if plothist == 1
     for i=1:L
-        rab_density_hist(D(:,i));
+        figure; rst_density_hist(D(:,i));
     end
 end
 
