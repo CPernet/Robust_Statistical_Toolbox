@@ -113,9 +113,6 @@ switch lower(test)
             Chi2 = ((b-c)^2) / (b+c);
             % central Fisher’s exact test, Fay,(2010)
             pval = min(1,2*min(binocdf(b,(b+c),0.5),1-binocdf(b,(b+c),0.5))); 
-            if b ~=0 && c==0
-                 pval = 1; % - chi2cdf(Chi2,1);
-            end
             
             % odd ratio
             if nargout == 3
