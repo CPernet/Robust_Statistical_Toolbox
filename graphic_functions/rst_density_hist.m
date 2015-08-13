@@ -12,6 +12,8 @@ function[x,nu,xp,yp] = rst_density_hist(data,units)
 %       yp = nb of expected observations per bin
 %
 % Cyril Pernet 18-Feb-2011
+% ----------------------------------------------------------------------
+% Copyright (C) RST Toolbox Team 2015
 
 if nargin == 1
     units = 'data values';

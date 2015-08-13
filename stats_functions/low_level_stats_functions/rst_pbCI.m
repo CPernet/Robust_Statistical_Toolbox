@@ -1,6 +1,6 @@
 function [EST,CI,bootx,p] = rst_pbCI(X,nboot,alphav,est,q,mu)
 
-% function [EST,CI,p] = pbCI(x,nboot,alpha,est,q,mu)
+% function [EST,CI,bootx,p] = rst_pbCI(x,nboot,alpha,est,q,mu)
 % 
 % Compute a percentile bootstrap confidence interval
 %   INPUTS:
