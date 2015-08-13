@@ -22,13 +22,13 @@ function [HDQ,CIQ] = rst_hd(varargin)
 % CP, The University of Edinburgh - update of the code combining estimate
 % and CI + takes matrices as input August 2014
 % ----------------------------------------------------------------------
-% Copyright (C) RST Toolbox Team 2014
+% Copyright (C) RST Toolbox Team 2015
 
 %% inputs
 
 % defaults
 X = varargin{1};
-[p,N]=size(X); % number of estimes to compute
+[p,N]=size(X); % number of estimates to compute
 if p==1 % if X row vector, transpose to column
     X=X'; 
     [p,N]=size(X);

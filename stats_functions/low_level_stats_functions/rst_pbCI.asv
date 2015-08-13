@@ -25,10 +25,9 @@ function [EST,CI,bootx,p] = rst_pbCI(X,nboot,alphav,est,q,mu)
 % GAR - University of Glasgow - Dec 2007
 % added EST output - Nov 2008
 % Cyril Pernet updated the function with rng and removed the bootstrap loop
-%              for faster computation using randi , also allowed for matrix
-%              input and added bootx output - Aug 2015
+%              for faster computation using rnadi , alos added outputs - Aug 2015
 % ----------------------------------------------------------------------
-% Copyright (C) RST Toolbox Team 2015
+% Copyright (C) RST Toolbox Team 2014
 
 %% check arguments
 
@@ -86,8 +85,8 @@ for s = 1:N
             EST(s)=rst_hd(x,q);
             bootx(:,s)=rst_hd(x(randi(n,n,nboot)),q);
         case {'tm'} % trimmed mean
-            EST(s)=rst_trimmean(x,q);
-            bootx(:,s)=rst_trimmean(x(randi(n,n,nboot)),q);
+            EST(s)=rst_tm(x,q);
+            bootx(:,s)=rst_tm(x(randi(n,n,nboot)),q);
         case {'trimmean'} % trimmed mean - Matlab function
             EST(s)=trimmean(x,q*2);
             bootx(:,s)=trimmean(x(randi(n,n,nboot)),q*2);
@@ -106,6 +105,7 @@ if nargout > 3
     if nargin < 6 || isempty(mu)
        mu=0; 
     end
-   p = sum(bootx>mu,1)./nboot;
+   p = sum(bootx>mu,1)
+   )./nboot;
    p = 2.*min(p,1-p);
 end
