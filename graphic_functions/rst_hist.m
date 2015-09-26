@@ -59,9 +59,14 @@ h = x(2) - x(1);
 
 %% plot
 if nargout == 0
-    bar(x,n/(length(data)*h),opt.BarWidth, ...
+    try
+        bar(x,n/(length(data)*h),opt.BarWidth, ...
         'FaceColor',opt.FaceColor,'EdgeColor',opt.EdgeColor, ...
         'FaceAlpha',opt.FaceAlpha,'EdgeAlpha',opt.EdgeAlpha);
+    catch
+        bar(x,n/(length(data)*h),opt.BarWidth, ...
+        'FaceColor',opt.FaceColor,'EdgeColor',opt.EdgeColor);
+    end
     xlabel('data values','FontSize',12); ylabel('Freq.','FontSize',12)
     grid on; hold on; set(gca,'Layer','Top')
 end

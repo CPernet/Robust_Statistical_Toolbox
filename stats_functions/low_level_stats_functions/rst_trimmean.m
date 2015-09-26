@@ -42,6 +42,7 @@ end
 [n,p]=size(data);
 if n== 1 && p>2 
     data = data'; % transpose row vector in column vector if needed
+    [n,p]=size(data);
 end
 
 
