@@ -186,7 +186,7 @@ if newfig == 1
     figure('Name', 'Pair-wise comparisons')
     set(gcf,'Color','w')
     bar([1:L],diff); hold on
-    errorbar([1:L],diff,diff-CI_boot(1,:),diff-CI_boot(2,:),'r','LineWidth',2);
+    errorbar([1:L],diff,diff-CI_boot(1,:),CI_boot(2,:)-diff,'r','LineWidth',2);
     title(['Difference between pairs and ' num2str(100-alpha*100) '% CI'],'FontSize',16); grid on
     ylabel('Difference between condition','FontSize',14);
     for i=1:L
