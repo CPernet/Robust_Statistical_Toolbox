@@ -44,10 +44,10 @@ end
 
 means_gp1 = squeeze(nanmean(boot_gp1,1)); % means over resampled subjects
 means_gp2 = squeeze(nanmean(boot_gp2,1));
-boot_means1 = mean(means_gp1,2); % means over all bootstrap
-boot_means2 = mean(means_gp2,2);
-Tau1 = (1/(nboot-1))*sum((means_gp1-boot_means1(:,ones(1,nboot))).^2,2); % standard error of each condition
-Tau2 = (1/(nboot-1))*sum((means_gp2-boot_means2(:,ones(1,nboot))).^2,2);
+boot_means1 = nanmean(means_gp1,2); % means over all bootstrap
+boot_means2 = nanmean(means_gp2,2);
+Tau1 = (1/(nboot-1))*nansum((means_gp1-boot_means1(:,ones(1,nboot))).^2,2); % standard error of each condition
+Tau2 = (1/(nboot-1))*nansum((means_gp2-boot_means2(:,ones(1,nboot))).^2,2);
 H = abs(means_gp1 - means_gp2 - repmat((boot_means1-boot_means2),1,nboot)) ...
     ./ repmat((sqrt(Tau1+Tau2)),1,nboot); % difference between conditions
 Hmax = sort(max(H)); % maximum differences over all bootstraps across conditions
@@ -95,5 +95,6 @@ if flag == 1
     set(gca,'xtick',[1:length(difference)]);
     v=axis; ymin = v(3) + (v(4)-v(3))/10;
 end
+
 
 
