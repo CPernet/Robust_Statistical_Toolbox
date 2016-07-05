@@ -1,15 +1,15 @@
-function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alpha,est,newfig,plothist)
+function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alphav,est,newfig,plothist)
 
 % performs multiple comparisons between pairs based on a percentile bootstrap
-% on differences - alpha is adjusted to control the type 1 error rate.
+% on differences - alphav is adjusted to control the type 1 error rate.
 %
 % FORMAT
-% [diff,CI_boot,p,h]= rst_multicompare(Data,pairs,alpha,est,newfig,plothist)
+% [diff,CI_boot,p,h]= rst_multicompare(Data,pairs,alphav,est,newfig,plothist)
 %
 % INPUT
 % Data     = 2D matrix (n*p) of repeated measures
 % pairs    = matrix 2*n for which pairs to test ([] means all)
-% alpha    = 5% (default) or 10%
+% alphav    = 5% (default) or 10%
 % est      = which estimator to use 'mean','median', or 'trimmean'
 % newfig   = 0 if one doesn't want the function to create a new figure 
 %            (ie allows to plot within an existing one) 
@@ -25,8 +25,8 @@ function [diff,CI_boot,p,h,H]= rst_multicompare(Data,pairs,alpha,est,newfig,plot
 % Multiple comparisons are computed as described in Wilcox, R.R. (2005)
 % Robust Estimation and Hypothesis Testing (2nd Ed). Elsevier, Academic
 % Press, San Diego, CA, USA. If N<80 and less than 10 pairs are tested, the
-% alpha value is set a priori based on simulation results. If N<80 and more
-% then 10 pairs are tested, alpha is Bonferroni corrected. If N>80, alpha
+% alphav value is set a priori based on simulation results. If N<80 and more
+% then 10 pairs are tested, alphav is Bonferroni corrected. If N>80, alphav
 % is adjusted using Hochberg step-up procedure. Overview of these
 % procedures, and others, can be found at 
 % http://en.wikipedia.org/wiki/Familywise_error_rate
@@ -44,7 +44,7 @@ if nargin < 2
 end
 
 if nargin < 3
-    alpha = 5/100;
+    alphav = 5/100;
 end
 
 if nargin < 4
@@ -71,23 +71,23 @@ else
 end
 L = length(all_pairs);
 
-% get alpha if n < 80
+% get alphav if n < 80
 % -------------------
 if n < 80 % small sample size, method SR
     if L>10
-        alpha = alpha / L;
+        alphav = alphav / L;
     else
-        test(1) = (alpha ~= .05);
-        test(2) = (alpha ~= .01);
+        test(1) = (alphav ~= .05);
+        test(2) = (alphav ~= .1);
         if sum(test) ==2
             error('multiple comparisons only works with apha 5% or 10%');
         else
-            alpha = getalphac(alpha,L);
+            alphav = getalphavc(alphav,L);
         end
     end
 end
 
-low = round(nboot.*alpha./2);
+low = round(nboot.*alphav./2);
 high = nboot - low;
 
 % compute bootstrap differences
@@ -158,12 +158,12 @@ end
 % ---------
 h = zeros(L,1);  
 if n < 80 % small sample size, method SR
-    tmp = sortedp<alpha;
+    tmp = sortedp<alphav;
     h = tmp(inverseindex);
     
 else % large sample size, Hochberg, 1988
-    decreased_alpha = repmat(alpha,L,1)./(1:L)';
-    test = sortedp < decreased_alpha;
+    decreased_alphav = repmat(alphav,L,1)./(1:L)';
+    test = sortedp < decreased_alphav;
     go = 1; index = 1; 
     while go == 1
         if test(index) == 1
@@ -187,7 +187,7 @@ if newfig == 1
     set(gcf,'Color','w')
     bar([1:L],diff); hold on
     errorbar([1:L],diff,diff-CI_boot(1,:),CI_boot(2,:)-diff,'r','LineWidth',2);
-    title(['Difference between pairs and ' num2str(100-alpha*100) '% CI'],'FontSize',16); grid on
+    title(['Difference between pairs and ' num2str(100-alphav*100) '% CI'],'FontSize',16); grid on
     ylabel('Difference between condition','FontSize',14);
     for i=1:L
         xname{i} = [num2str(all_pairs(i,1)) '/' num2str(all_pairs(i,2)) ' '];
@@ -207,33 +207,33 @@ end
 
 end
 
-function alphac = getalphac(alpha,L)
+function alphavc = getalphavc(alphav,L)
 
 % table precomputed by Wilcox
 
-if alpha == 5/100
-    if L == 1; alphac = .025;
-    elseif L == 2; alphac = .025;
-    elseif L == 3; alphac = .0169;
-    elseif L == 4; alphac = .0127;
-    elseif L == 5; alphac = .0102;
-    elseif L == 6; alphac = .00851;
-    elseif L == 7; alphac = .0073;
-    elseif L == 8; alphac = .00639;
-    elseif L == 9; alphac = .00568;
-    elseif L == 10; alphac = .00511;
+if alphav == 5/100
+    if L == 1; alphavc = .025;
+    elseif L == 2; alphavc = .025;
+    elseif L == 3; alphavc = .0169;
+    elseif L == 4; alphavc = .0127;
+    elseif L == 5; alphavc = .0102;
+    elseif L == 6; alphavc = .00851;
+    elseif L == 7; alphavc = .0073;
+    elseif L == 8; alphavc = .00639;
+    elseif L == 9; alphavc = .00568;
+    elseif L == 10; alphavc = .00511;
     end
 else
-    if L == 1; alphac = .005;
-    elseif L == 2; alphac = .005;
-    elseif L == 3; alphac = .00334;
-    elseif L == 4; alphac = .00251;
-    elseif L == 5; alphac = .00201;
-    elseif L == 6; alphac = .00167;
-    elseif L == 7; alphac = .00143;
-    elseif L == 8; alphac = .00126;
-    elseif L == 9; alphac = .00112;
-    elseif L == 10; alphac = .00101;
+    if L == 1; alphavc = .005;
+    elseif L == 2; alphavc = .005;
+    elseif L == 3; alphavc = .00334;
+    elseif L == 4; alphavc = .00251;
+    elseif L == 5; alphavc = .00201;
+    elseif L == 6; alphavc = .00167;
+    elseif L == 7; alphavc = .00143;
+    elseif L == 8; alphavc = .00126;
+    elseif L == 9; alphavc = .00112;
+    elseif L == 10; alphavc = .00101;
     end
 end
 end

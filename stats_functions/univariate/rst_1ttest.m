@@ -138,7 +138,7 @@ if strcmp(est,'mean')
         end
     end
          
-    % add an execption
+    % add an exeption
     for c=1:size(data,2)
         if sum(CI(:,c)) == 0
             h(c) = 0;

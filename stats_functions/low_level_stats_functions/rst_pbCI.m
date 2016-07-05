@@ -9,7 +9,7 @@ function [EST,CI,bootx,p] = rst_pbCI(X,nboot,alphav,est,q,mu)
 %           alphav is the alpha level (default 5% bonferroni adjustred for the number of columns of x)
 %           est is the choosen estimator: 
 %               - hd (Harrell-Davis, default q=0.5 ie HD of the median) 
-%               - tm (default 20%, same as trimmen but using our function) 
+%               - tm (default 20%, same as trimmean but using our function) 
 %               - trimmen (default 20%, same as tm but using matlab function)
 %               - median (default)
 %           q argument for estimator

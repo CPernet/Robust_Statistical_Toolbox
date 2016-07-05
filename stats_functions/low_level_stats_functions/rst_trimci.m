@@ -1,4 +1,4 @@
-function [tmean,tmCIlo,tmCIhi,g,se,p,Ty] = rst_trimci(x,percent,alpha,out,mu)
+function [tmean,tmCIlo,tmCIhi,df,se,p,Ty] = rst_trimci(x,percent,alpha,out,mu)
 
 % function [tm,tmCIlo,tmCIhi,g,se,p,Ty] = trimci(x,percent,alpha,out,mu)
 % Returns the 1-alpha confidence interval of the trimmed mean.
@@ -47,8 +47,8 @@ if sz > 2 | min(sz) > 1
   error('trimci requires x to be a vector, not a matrix.');
 end    
 
-tmean = tm(x,percent); % compute trimmed mean
-[tv,g] = tvar(x,percent); % trimmed squared standard error + g trimmed elements
+tmean = rst_trimmean(x,percent); % compute trimmed mean
+[tv,g] = rst_winvar(x,percent); % trimmed squared standard error + g trimmed elements
 se = sqrt(tv); % trimmed standard error
 df = length(x) - 2.*g - 1; % n-2g = number of observations left after trimming
 
@@ -66,7 +66,7 @@ end
 if nargout > 5
     Ty = (tmean-mu)./se;
     p=2*(1-tcdf(abs(Ty),df));
-%     h=abs(Ty)>tinv(1-alpha,df);
+    h=abs(Ty)>tinv(1-alpha,df);
 end
 
 
