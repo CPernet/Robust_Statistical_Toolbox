@@ -1,80 +1,68 @@
-function rst_data_plot(data,gp)
+function rst_data_plot(data)
 
-% plots the data split by levels and groups
-% data is a matrix such as
-%          size(data,1) = length(gp)
-%          size(data,2) = levels
-% for instance if size(data) = [20,2] we can define a vector gp and the
-% plot will be data split per gp and in each gp 2 subplots
-% there is one boxplot with median and interquartile range and there is a
-% bar graph with the within-subject variance bar in each group - the same
-% is plotted as curves
+% plots the data split by groups
 
-% check input
-% ------------
-if nargin >2 
-    error('wrong number of arguments');
-elseif nargin == 1
-    N = size(data,1);
-    levels = size(data,2);
-    gp = ones(N,1); v = 1; n = N;
-else
-    N = size(data,1);
-    levels = size(data,2);
-    v = unique(gp);
-    for i=1:length(v)
-        n(i) = sum(gp == v(i));
+Data = randn(100,3);
+
+figure; hold on
+
+%% how many groups
+grouping = size(Data,2);
+
+%% select color scheme
+% intensity based: Green, D. A., 2011, `A colour scheme for the display of
+% astronomical intensity images', Bulletin of the Astronomical Society of 
+% India, 39, 289.
+
+color_scheme = cubehelix(grouping+1,[0.5,-1.5,1,1], [0,1], [0,1]);
+
+%% Scatter plot of the data with automatic spread
+% scatter plot parameters
+within_gp_dispersion = 0.025;
+point_size = 50;
+
+for u=1:grouping
+    tmp = sort(Data(~isnan(Data(:,u)),u));
+    % find a spread needed
+    s = sum(diff(tmp) < 0.1);
+    spread = [0:(1/s):1];
+    % creater a matrix with that spread
+    change = find(diff(tmp) < 0.1);
+    Y = NaN(length(tmp),2);
+    Y(1:change(1),1) = tmp(1:change(1));
+    c_index = 2;
+    for c=2:length(change)
+        Y((change(c-1)+1):change(c),c_index) = tmp((change(c-1)+1):change(c));
+        if mod(c,2) == 0
+            c_index = 1;
+        else
+            c_index = 2;
+        end
     end
+    Y((change(c)+1):length(tmp),c_index) = tmp((change(c)+1):length(tmp));
+    % plot
+    X = repmat([0 within_gp_dispersion],[length(tmp),1]) + u;
+    X(isnan(Y)) = NaN;
+    for p=1:size(Y,2)
+        scatter(X(:,p),Y(:,p),point_size,color_scheme(u,:));
+    end
+end   
+cst = max(abs(diff(Data(:)))) * 0.1;
+axis([0.5 grouping+0.5 min(Data(:))-cst max(Data(:))+cst])    
+    
+%% Add the density estimate 
+for u=1:grouping
+    tmp = sort(Data(~isnan(Data(:,u)),u));
+    [N,X]=rst_RASH(tmp);
+    % plot
+    
+    
 end
 
-% histograms
-% ----------
-figure('Name','histrograms');
-index = 1;
-for i=1:length(v)
-    tmp = data(gp == v(i),:);
-    for j=1:levels
-        subplot(length(v),levels,index);
-        hist(tmp(:,j)); grid on
-        title(['data gp ' num2str(i) 'condition' num2str(j)],'FontSize',14);
-     index = index + 1;
-   end
-end
+%% Add the summary stat with 95% HDI (Bayes bootstrap)
 
 
-% boxplot
-% ---------
-rows = ceil(length(v)/3); % max 3 subplots per rows
-columns = ceil(length(v) / rows); 
-figure('Name','boxplots');
-for i=1:length(v)
-    tmp = data(gp == v(i),:);
-    subplot(rows,columns,i);
-    boxplot(tmp,'outliersize', 10); grid on
-    title(['data gp ' num2str(i)],'FontSize',14);
-end
-
-% bar graphs
-% ----------
-figure('Name','Bars and standard errors');
-for i=1:length(v)
-    tmp = data(gp == v(i),:);
-    subplot(rows,columns,i);
-    stderror = std(tmp)/sqrt(n(i));
-    bar(mean(tmp)); hold on
-    errorbar(nanmean(tmp),stderror,'r','LineWidth',2); 
-    title(['data gp ' num2str(i)],'FontSize',14);grid on
-end
-
-% curves
-% ---------
-figure('Name','Bars and standard errors');
-for i=1:length(v)
-    tmp = data(gp == v(i),:);
-    subplot(rows,columns,i);
-    stderror = std(tmp)/sqrt(n(i));
-    plot(mean(tmp)); hold on
-    errorbar(nanmean(tmp),stderror,'r','LineWidth',2); 
-    title(['data gp ' num2str(i)],'FontSize',14);grid on
-end
+%% finish off
+grid on
+box on
 
