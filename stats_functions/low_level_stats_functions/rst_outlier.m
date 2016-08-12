@@ -28,7 +28,7 @@ function [class,distance] = rst_outlier(data,method)
 % non symmetric distributons
 %
 % Ref. Rousseeuw, P.J. and Croux C. (1993). Alternatives to the the median
-% absolute deviation. Journal of the American Statitical Association, 88
+% absolute deviation. Journal of the American Statistical Association, 88
 % (424) p 1273-1263
 %
 % Cyril Pernet v1 - May 2012
