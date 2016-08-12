@@ -39,7 +39,7 @@ decile = .5;            % Median estimated using the 5th decile of Harell Davis
 between_gp_dispersion = 0.25;
 within_gp_dispersion = 0.025;
 point_size = 50;
-estimator = 'HD';
+estimator = 'Median';
 
 % check inputs
 for n=1:(nargin-1)
@@ -114,14 +114,11 @@ for u=1:grouping
     % remove 0s
     bc(find(K==0)) = [];
     K(find(K==0))= [];
-    % map bc onto observed values
-    steps = range(tmp)/(length(bc)-1);
-    newbc = min(tmp):steps:max(tmp);
     % create symmetric values 
     K = K/max(K); high=(K/2); low=(-high);
     % plot
-    y1 = plot(high+gp_index(u),newbc); set(y1,'Color',color_scheme(u,:)); hold on
-    y2 = plot(low+gp_index(u),newbc); set(y1,'Color',color_scheme(u,:)); 
+    y1 = plot(high+gp_index(u),bc); set(y1,'Color',color_scheme(u,:)); hold on
+    y2 = plot(low+gp_index(u),bc); set(y1,'Color',color_scheme(u,:)); 
     xpoints=[y2.XData',y1.XData']; filled=[y2.YData',y1.YData'];
     hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
     set(fillhandle,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color   
