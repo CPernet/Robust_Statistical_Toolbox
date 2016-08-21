@@ -141,20 +141,54 @@ for u=1:grouping
     % get the kernel
     [bc,K]=rst_RASH(tmp,100,dist_method);
     % remove 0s
-    bc(K==0) = [];
-    K(K==0)= [];
-    % create symmetric values 
-    K = K/max(K); high=(K/2); low=(-high);
-    % plot
+    bc(K==0)=[]; K(K==0)= [];
+    % create symmetric values
+    K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
+    high=(K/2); low=(-high);
+    
+    % plot contours
     y1 = plot(high+gp_index(u),bc); set(y1,'Color',color_scheme(u,:)); hold on
-    y2 = plot(low+gp_index(u),bc); set(y1,'Color',color_scheme(u,:)); 
+    y2 = plot(low+gp_index(u),bc); set(y1,'Color',color_scheme(u,:));
     if isnumeric(y1)
-        y1 = get(y1); y2 = get(y2); % old school matlab figures
+        y1 = get(y1); y2 = get(y2); % old fashion matlab
     end
+    % fill
     xpoints=[y2.XData',y1.XData']; filled=[y2.YData',y1.YData'];
+    % check that we have continuous data, otherwise 0 pad
+    if diff(xpoints(1,:)) > 0.001*(range(xpoints(:,1)))
+        xtmp = NaN(size(xpoints,1)+1,size(xpoints,2));
+        xtmp(1,:) = [gp_index(u) gp_index(u)];
+        xtmp(2:end,:) = xpoints;
+        xpoints = xtmp; clear xtmp
+        ytmp = NaN(size(filled,1)+1,size(filled,2));
+        ytmp(1,:) = filled(1,:);
+        ytmp(2:end,:) = filled;
+        filled = ytmp; clear ytmp        
+    end
+    
+    if diff(xpoints(end,:)) > 0.001*(range(xpoints(:,1)))
+        xpoints(end+1,:) = [gp_index(u) gp_index(u)];
+        filled(end+1,:)  = filled(end,:);
+    end   
     hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
-    set(fillhandle,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color   
+    set(fillhandle,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
 
+    %% add IQR - using again Harell-Davis Q
+    ql = rst_hd(tmp,0.25);
+    [~,position] = min(abs(filled(:,1) - ql));
+    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+    if  strcmpi(estimator,'median')
+        qm = est(u);
+    else
+        qu = rst_hd(tmp,0.5);
+    end
+    [~,position] = min(abs(filled(:,1) - qm));
+    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+    qu = rst_hd(tmp,0.75);
+    [~,position] = min(abs(filled(:,1) - qu));
+    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+    clear xpoints filled
+    
     %% Hight Density Intervals
     tmp = sorted_data(:,u);
     ci = 1:nCIs; ciWidth = tmp(ci+upper_centile) - tmp(ci); % all centile distances
@@ -181,4 +215,23 @@ else
 end
 grid on
 box on
+
+if exist('plotly','file') == 2
+    output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
+    if strcmp(output,'Yes')
+        save_dir = uigetdir('select directory to save html files','save in');
+        if ~isempty(save_dir)
+            cd(save_dir)
+            try
+                fig2plotly(gcf,'strip',true,'offline', true);
+            catch
+                fig2plotly(gcf,'strip',true); % in case local lib not available
+            end
+        else
+            return
+        end
+    else
+        return
+    end
+end
 
