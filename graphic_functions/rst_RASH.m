@@ -64,8 +64,8 @@ switch type
         h = 2.15*sqrt(var(data))*n^(-1/5);
         delta = h/m;
         % 1 make a mesh with size delta
-        t0 = min(data)-1;
-        tf = max(data)+1;
+        t0 = min(data)-0.001*(range(data));
+        tf = max(data)+0.001*(range(data));
         nbin = ceil((tf-t0)/delta);
         binedge = t0:delta:(t0+delta*nbin);
         out = find(binedge>tf);
@@ -105,8 +105,8 @@ switch type
         h = 2.15*sqrt(var(data))*n^(-1/5);
         delta = h/m;
         % 1 make a mesh with size delta
-        t0 = min(data)-1;
-        tf = max(data)+1;
+        t0 = min(data)-0.001*(range(data));
+        tf = max(data)+0.001*(range(data));
         nbin = ceil((tf-t0)/delta);
         binedge = t0:delta:(t0+delta*nbin);
         out = find(binedge>tf);
