@@ -41,25 +41,46 @@ decile = .5;            % Median estimated using the 5th decile of Harell Davis
 between_gp_dispersion = 0.25;
 within_gp_dispersion = 0.025;
 point_size = 50;
-estimator = 'Median';
 
 % check inputs
-for n=1:(nargin-1)
-   if strcmpi(varargin(n),'between')
-       between_gp_dispersion = cell2mat(varargin(n+1));
-   elseif strcmpi(varargin(n),'within')
-       within_gp_dispersion = cell2mat(varargin(n+1));
-   elseif strcmpi(varargin(n),'point_size')
-       point_size = cell2mat(varargin(n+1));
-   elseif strcmpi(varargin(n),'estimator')       
-       if ~strcmpi(varargin(n+1),'median') && ...
-               ~strcmpi(varargin(n+1),'mean') && ...
-               ~strcmpi(varargin(n+1),'trimmed mean')
-           error(['estimator ' cell2mat(varargin(n+1)) ' is not recognized'])
-       else
-           estimator = cell2mat(varargin(n+1));
-       end
-   end
+if ~exist('Data','var')
+    [name,place,sts]=uigetfile({'*.csv;*.tsv;*.txt'},'Select data file');
+    if sts == 0
+        return
+    else
+        if strcmp(name(end-2:end),'csv')
+            Data = csvread([place name]); % expect a comma between variables
+        elseif strcmp(name(end-2:end),'tsv')
+            Data = dlmread([place name]); % expect a tab between variables
+        elseif strcmp(name(end-2:end),'txt')
+            Data = load([place name]); % assumes just a space between variables
+        end
+    end
+end
+
+if nargin ==0
+    estimator = questdlg('Which summary statistics to plot?','Stat question','Mean',' 20% Trimmed mean','Median','Median');
+    if strcmp(estimator,' 20% Trimmed mean')
+        estimator = 'Trimmed mean';
+    end
+else
+    for n=1:(nargin-1)
+        if strcmpi(varargin(n),'between')
+            between_gp_dispersion = cell2mat(varargin(n+1));
+        elseif strcmpi(varargin(n),'within')
+            within_gp_dispersion = cell2mat(varargin(n+1));
+        elseif strcmpi(varargin(n),'point_size')
+            point_size = cell2mat(varargin(n+1));
+        elseif strcmpi(varargin(n),'estimator')
+            if ~strcmpi(varargin(n+1),'median') && ...
+                    ~strcmpi(varargin(n+1),'mean') && ...
+                    ~strcmpi(varargin(n+1),'trimmed mean')
+                error(['estimator ' cell2mat(varargin(n+1)) ' is not recognized'])
+            else
+                estimator = cell2mat(varargin(n+1));
+            end
+        end
+    end
 end
 
 %% how many groups
@@ -171,7 +192,7 @@ for u=1:grouping
         filled(end+1,:)  = filled(end,:);
     end   
     hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
-    set(fillhandle,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
+    set(fillhandle,'LineWidth',2,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
 
     %% add IQR - using again Harell-Davis Q
     ql = rst_hd(tmp,0.25);
@@ -209,12 +230,31 @@ cst = max(abs(diff(Data(:)))) * 0.1;
 axis([0.3 gp_index(grouping)+0.7 min(Data(:))-cst max(Data(:))+cst])    
 
 if size(Data,1) == 1
-title(sprintf('Data distribution with %s and 95%% High Dentity Interval',estimator));
+    title(sprintf('Data distribution with %s and 95%% High Density Interval',estimator),'FontSize',16);
 else
-   title(sprintf('Data distributions with %ss and 95%% High Dentity Intervals',estimator));
+    title(sprintf('Data distributions with %ss and 95%% High Density Intervals',estimator),'FontSize',16);
 end
-grid on
-box on
+grid on; box on; drawnow
+
+% add an output if not specified during the call
+if nargout == 0
+    S = questdlg('Save computed data?','Save option','Yes','No','No');
+    if strcmp(S,'Yes')
+        if exist(place,'var')
+            place = pwd;
+        end
+        cd(place); tmp = [est; HDI];
+        if strcmpi(estimator,'Mean')
+            save('Mean_and_HDI.txt','tmp','-ascii');
+        elseif strcmpi(estimator,'Trimmed Mean')
+            save('Trimmed-Mean_and_HDI.txt','tmp','-ascii');
+        elseif strcmpi(estimator,'Median')
+            save('Median_and_HDI.txt','tmp','-ascii');
+        end
+        save('S-outliers.txt','Outliers','-ascii');
+        fprintf('Data saved in %s\n',place)
+    end
+end
 
 if exist('plotly','file') == 2
     output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
