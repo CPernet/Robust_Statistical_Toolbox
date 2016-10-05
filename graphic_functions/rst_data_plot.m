@@ -58,7 +58,7 @@ if ~exist('Data','var')
     end
 end
 
-if nargin ==0
+if nargin ==1
     estimator = questdlg('Which summary statistics to plot?','Stat question','Mean',' 20% Trimmed mean','Median','Median');
     if strcmp(estimator,' 20% Trimmed mean')
         estimator = 'Trimmed mean';
@@ -135,18 +135,22 @@ for u=1:grouping
     tmp = sort(Data(~isnan(Data(:,u)),u));
     % creater a matrix with spread = 2
     change = find(diff(tmp) < 0.1);
-    Y = NaN(length(tmp),2);
-    Y(1:change(1),1) = tmp(1:change(1));
-    c_index = 2;
-    for c=2:length(change)
-        Y((change(c-1)+1):change(c),c_index) = tmp((change(c-1)+1):change(c));
-        if mod(c,2) == 0
-            c_index = 1;
-        else
-            c_index = 2;
+    if isempty(change)
+        Y = tmp;
+    else
+        Y = NaN(length(tmp),2);
+        Y(1:change(1),1) = tmp(1:change(1));
+        c_index = 2;
+        for c=2:length(change)
+            Y((change(c-1)+1):change(c),c_index) = tmp((change(c-1)+1):change(c));
+            if mod(c,2) == 0
+                c_index = 1;
+            else
+                c_index = 2;
+            end
         end
+        Y((change(c)+1):length(tmp),c_index) = tmp((change(c)+1):length(tmp));
     end
-    Y((change(c)+1):length(tmp),c_index) = tmp((change(c)+1):length(tmp));
     % find outliers
     class = rst_outlier(tmp,outlier_method);
     outliers = find(class);

@@ -12,6 +12,7 @@ function [h,CI,p] = rst_1ttest(varargin)
 % performed column wise and the resampling is identical in each column
 % - estimator = 'mean' --> performs a bootstrap-t on the mean
 % - estimator = 'median' --> performs a percentile bootstrap on the median
+%                note the median is the mid decile Harell-Davis estimator
 % - estimator = 'trimmean' --> performs a percentile bootstrap on the 20% trimmean (default)
 % - plot_option indicates to plot the result (1 - default) or not (0)
 % - alpha is the alpha level, default = 5%
@@ -160,12 +161,12 @@ else
     % now down to the resampling
     if strcmp(est,'median')
         try
-            M = nanmedian(data);
+            M = rst_hd(data,.5);
         catch ME
             error('NaN in the data, median estimator cannot be computed without the stat toolbox or the NaN suite')
         end
         if p==1
-            Mb = sort(nanmedian(D));
+            Mb = sort(rst_hd(D,.5));
             if sum(isnan(Mb)) > 0
                 Mb(find(isnan(Mb))) = [];
                 low = round((alphav*length(Mb))/2);
@@ -175,7 +176,7 @@ else
             pb = sum(Mb<0) / length(Mb);
         else
             for c = 1:p 
-                Mb = sort(nanmedian(D{c}));
+                Mb = sort(rst_hd(D{c},.5));
                 if sum(isnan(Mb)) > 0
                     Mb(find(isnan(Mb))) = [];
                     low = round((alphav*length(Mb))/2);
@@ -219,6 +220,9 @@ else
         else
             p(c) = min(pb(c), 1-pb(c));
             h(c) = p(c)<= (alphav/2);
+            if p(c) == 0
+               p(c) = 1/nboot; 
+            end
         end
     end
 end
