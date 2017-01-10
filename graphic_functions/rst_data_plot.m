@@ -1,4 +1,4 @@
-function [est,HDI]=rst_data_plot(Data,varargin)
+function [est,HDI]=rst_data_plot_fix(Data,varargin)
 
 % plots the data split by groups showing each data points with the
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
@@ -24,6 +24,7 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 % see also cubehelixmap, rst_outlier, rst_RASH, rst_trimmean, rst_hd
 %
 % Cyril Pernet - The University of Edinburgh
+% Eric Nicholas - The University of Rochester
 % -------------------------------------------------------------------------
 % Copyright (C) RST Toolbox Team 2015
 
@@ -132,24 +133,21 @@ color_scheme = cubehelixmap('semi_continuous',grouping+1);
 % scatter plot parameters
 
 for u=1:grouping
+    tic
     tmp = sort(Data(~isnan(Data(:,u)),u));
-    % creater a matrix with spread = 2
-    change = find(diff(tmp) < 0.1);
-    if isempty(change)
-        Y = tmp;
-    else
-        Y = NaN(length(tmp),2);
-        Y(1:change(1),1) = tmp(1:change(1));
-        c_index = 2;
-        for c=2:length(change)
-            Y((change(c-1)+1):change(c),c_index) = tmp((change(c-1)+1):change(c));
-            if mod(c,2) == 0
-                c_index = 1;
-            else
-                c_index = 2;
-            end
-        end
-        Y((change(c)+1):length(tmp),c_index) = tmp((change(c)+1):length(tmp));
+    % create a matrix with spread = 2
+    Y = NaN(length(tmp),2);
+    Y(1,1) = tmp(1);
+    c_index = [2 1];
+    c_thresh = round(range(tmp)/50,1);
+    for c = 2:length(tmp)
+        if tmp(c)-tmp(c-1) < c_thresh
+            Y(c,c_index(1)) = tmp(c);
+            c_index = fliplr(c_index);
+        else
+            Y(c,1) = tmp(c);
+            c_index = [2 1];
+        end    
     end
     % find outliers
     class = rst_outlier(tmp,outlier_method);
@@ -161,7 +159,7 @@ for u=1:grouping
         scatter(X(:,p),Y(:,p),point_size,color_scheme(u,:));
         scatter(X(outliers,p),Y(outliers,p),point_size,color_scheme(u,:),'filled');
     end
-    
+    toc
     %% Add the density estimate 
     % get the kernel
     [bc,K]=rst_RASH(tmp,100,dist_method);
@@ -278,4 +276,3 @@ if exist('plotly','file') == 2
         return
     end
 end
-
