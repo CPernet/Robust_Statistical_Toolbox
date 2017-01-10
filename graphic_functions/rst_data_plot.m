@@ -1,4 +1,4 @@
-function [est,HDI]=rst_data_plot_fix(Data,varargin)
+function [est,HDI]=rst_data_plot(Data,varargin)
 
 % plots the data split by groups showing each data points with the
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
