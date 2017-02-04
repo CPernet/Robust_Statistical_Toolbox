@@ -123,7 +123,9 @@ else
 end
 
 for u=1:grouping
+    tic
     tmp = sort(Data(~isnan(Data(:,u)),u));
+<<<<<<< HEAD
     
     if strcmpi(datascatter,'on')
         % find outliers
@@ -164,6 +166,7 @@ for u=1:grouping
             scatter(X(outliers(:,p)==1,p),Y(outliers(:,p)==1,p),(S(find(outliers(:,p)==1))-(point_size/2)),color_scheme(u,:),'+');
         end
     end
+=======
     % create a matrix with spread = 2
     Y = NaN(length(tmp),2);
     Y(1,1) = tmp(1);
@@ -197,6 +200,7 @@ for u=1:grouping
     % create symmetric values
     K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
     high=(K/2); low=(-high);
+>>>>>>> cb40d822e6da0fe7e268139303421629bc29a4c9
     
     %% Add the density estimate
     if strcmp(kernel,'on')
@@ -252,6 +256,7 @@ for u=1:grouping
         clear xpoints filled
     end
     
+<<<<<<< HEAD
     %% Bayes bootstrap
     
     % sample with replacement from Dirichlet
@@ -271,6 +276,7 @@ for u=1:grouping
         elseif strcmpi(estimator,'Median')
             bb(boot) = rst_hd(resample,.5);
         end
+=======
     if diff(xpoints(end,:)) > 0.001*(range(xpoints(:,1)))
         xpoints(end+1,:) = [gp_index(u) gp_index(u)];
         filled(end+1,:)  = filled(end,:);
@@ -286,6 +292,7 @@ for u=1:grouping
         qm = est(u);
     else
         qm = rst_hd(tmp,0.5);
+>>>>>>> cb40d822e6da0fe7e268139303421629bc29a4c9
     end
     
     sorted_data = sort(bb); % sort bootstrap estimates
@@ -344,3 +351,43 @@ if nargout == 0
     end
 end
 
+<<<<<<< HEAD
+% if exist('plotly','file') == 2
+%     output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
+%     if strcmp(output,'Yes')
+%         save_dir = uigetdir('select directory to save html files','save in');
+%         if ~isempty(save_dir)
+%             cd(save_dir)
+%             try
+%                 fig2plotly(gcf,'strip',true,'offline', true);
+%             catch
+%                 fig2plotly(gcf,'strip',true); % in case local lib not available
+%             end
+%         else
+%             return
+%         end
+%     else
+%         return
+%     end
+% end
+
+=======
+if exist('plotly','file') == 2
+    output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
+    if strcmp(output,'Yes')
+        save_dir = uigetdir('select directory to save html files','save in');
+        if ~isempty(save_dir)
+            cd(save_dir)
+            try
+                fig2plotly(gcf,'strip',true,'offline', true);
+            catch
+                fig2plotly(gcf,'strip',true); % in case local lib not available
+            end
+        else
+            return
+        end
+    else
+        return
+    end
+end
+>>>>>>> cb40d822e6da0fe7e268139303421629bc29a4c9
