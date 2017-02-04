@@ -6,23 +6,27 @@ function [bc,K]= rst_RASH(varargin)
 % - Random Average Shifted Histogram algorithm is coded based on Bourel et
 % al. Computational Statistics and Data Analysis 79 (2014) 149–164
 %
-% FORMAT rst_RASH(data,m,type)
+% FORMAT [bc,K]=rst_RASH(data)
 %        [bc,K]=rst_RASH(data,m,type)
 %
 % INPUT  data is a vector
-%        m is te how many histograms to compute (Default = 100);
-%        type is 'ASH' ior 'RASH'
+%        m is how many histograms to compute (Default = 100);
+%        type is 'ASH' or 'RASH'
 %
-% OUTPUT is none specified is creates a figure
+% OUTPUT if none specified it creates a figure
 %        bc is the bin count
 %        K is the estimated histogram / kernel
 %
-% Cyril Pernet 2 Auhust 2016
+% Cyril Pernet 2 August 2016
 % The University of Edinburgh
 % -----------------------------------
 % Copyright Robust Statistical Toolbox
 
 data = varargin{1};
+if sum(isnan(data)) ~=0
+    warndlg('NaN data included')
+end
+
 if size(data,1) == 1
     data = data';
 end
@@ -64,8 +68,12 @@ switch type
         h = 2.15*sqrt(var(data))*n^(-1/5);
         delta = h/m;
         % 1 make a mesh with size delta
-        t0 = min(data)-min(diff(data))/2;
-        tf = max(data)+min(diff(data))/2;
+        offset = min(diff(data))/2; 
+        if abs(offset) > 1
+            offset = 0.5;
+        end
+        t0 = min(data) - offset;
+        tf = max(data) + offset;
         nbin = ceil((tf-t0)/delta);
         binedge = t0:delta:(t0+delta*nbin);
         out = find(binedge>tf);
@@ -105,16 +113,22 @@ switch type
         h = 2.15*sqrt(var(data))*n^(-1/5);
         delta = h/m;
         % 1 make a mesh with size delta
-        t0 = min(data)-min(diff(data))/2;
-        tf = max(data)+min(diff(data))/2;
+        offset = min(diff(data))/2; 
+        if abs(offset) > 1
+            offset = 0.5;
+        end
+        t0 = min(data) - offset;
+        tf = max(data) + offset;
         nbin = ceil((tf-t0)/delta);
         binedge = t0:delta:(t0+delta*nbin);
         out = find(binedge>tf);
-        if out == 1
-            binedge(out) = tf;
-        else
-            binedge(out(1)) = tf;
-            binedge(out(2:end)) = [];
+        if ~isempty(out)
+            if length(out)== 1
+                binedge(out) = tf;
+            else
+                binedge(out(1)) = tf;
+                binedge(out(2:end)) = [];
+            end
         end
         % 2 Get the weight vector.
         kern = inline('(15/16)*(1-x.^2).^2');
@@ -138,6 +152,8 @@ switch type
         end
         K = mean(RSH,1);
         bc = t0+((1:nbin)-0.5)*delta;
+        offset = min(bc)-min(data);
+        bc = bc - offset;
         
         if nargout == 0
             figure; bar(bc,K,1,'FaceColor',[0.5 0.5 1]);
