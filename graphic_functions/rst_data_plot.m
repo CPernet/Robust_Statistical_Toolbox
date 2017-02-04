@@ -266,15 +266,17 @@ axis([0.3 gp_index(grouping)+0.7 plot_min plot_max])
 
 
 if size(Data,1) == 1
-    if strcmp('datascatter','on') && strcmp('kernel','off')
+    if strcmp(datascatter,'on') && strcmp(kernel,'off')
         title(sprintf('Data scatter with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
-    elseif strcmp('kernel','on')
+    end
+    if strcmp(kernel,'on')
         title(sprintf('Data distribution with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
     end
 else
-    if strcmp('datascatter','on') && strcmp('kernel','off')
+    if strcmp(datascatter,'on') && strcmp(kernel,'off')
         title(sprintf('Data scatters with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
-    elseif strcmp('kernel','on')
+    end
+    if strcmp(kernel,'on')
         title(sprintf('Data distributions with %ss \n and 95%% High Density Intervals',estimator),'FontSize',16);
     end
 end
