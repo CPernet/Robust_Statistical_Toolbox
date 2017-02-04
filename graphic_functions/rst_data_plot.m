@@ -27,6 +27,7 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 % see also cubehelixmap, rst_outlier, rst_RASH, rst_trimmean, rst_hd
 %
 % Cyril Pernet - The University of Edinburgh
+% Eric Nicholas - The University of Rochester
 % -------------------------------------------------------------------------
 % Copyright (C) RST Toolbox Team 2015
 
@@ -63,7 +64,7 @@ if ~exist('Data','var')
     end
 end
 
-if nargin ==0
+if nargin ==1
     estimator = questdlg('Which summary statistics to plot?','Stat question','Mean',' 20% Trimmed mean','Median','Median');
     if strcmp(estimator,' 20% Trimmed mean')
         estimator = 'Trimmed mean';
@@ -163,6 +164,39 @@ for u=1:grouping
             scatter(X(outliers(:,p)==1,p),Y(outliers(:,p)==1,p),(S(find(outliers(:,p)==1))-(point_size/2)),color_scheme(u,:),'+');
         end
     end
+    % create a matrix with spread = 2
+    Y = NaN(length(tmp),2);
+    Y(1,1) = tmp(1);
+    c_index = [2 1];
+    c_thresh = round(range(tmp)/50,1);
+    for c = 2:length(tmp)
+        if tmp(c)-tmp(c-1) < c_thresh
+            Y(c,c_index(1)) = tmp(c);
+            c_index = fliplr(c_index);
+        else
+            Y(c,1) = tmp(c);
+            c_index = [2 1];
+        end    
+    end
+    % find outliers
+    class = rst_outlier(tmp,outlier_method);
+    outliers = find(class);
+    % plot
+    X = repmat([0 within_gp_dispersion],[length(tmp),1]) + gp_index(u);
+    X(isnan(Y)) = NaN;
+    for p=1:size(Y,2)
+        scatter(X(:,p),Y(:,p),point_size,color_scheme(u,:));
+        scatter(X(outliers,p),Y(outliers,p),point_size,color_scheme(u,:),'filled');
+    end
+    toc
+    %% Add the density estimate 
+    % get the kernel
+    [bc,K]=rst_RASH(tmp,100,dist_method);
+    % remove 0s
+    bc(K==0)=[]; K(K==0)= [];
+    % create symmetric values
+    K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
+    high=(K/2); low=(-high);
     
     %% Add the density estimate
     if strcmp(kernel,'on')
@@ -237,6 +271,21 @@ for u=1:grouping
         elseif strcmpi(estimator,'Median')
             bb(boot) = rst_hd(resample,.5);
         end
+    if diff(xpoints(end,:)) > 0.001*(range(xpoints(:,1)))
+        xpoints(end+1,:) = [gp_index(u) gp_index(u)];
+        filled(end+1,:)  = filled(end,:);
+    end   
+    hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
+    set(fillhandle,'LineWidth',2,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
+
+    %% add IQR - using again Harell-Davis Q
+    ql = rst_hd(tmp,0.25);
+    [~,position] = min(abs(filled(:,1) - ql));
+    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+    if  strcmpi(estimator,'median')
+        qm = est(u);
+    else
+        qm = rst_hd(tmp,0.5);
     end
     
     sorted_data = sort(bb); % sort bootstrap estimates
@@ -294,23 +343,4 @@ if nargout == 0
         fprintf('Data saved in %s\n',place)
     end
 end
-
-% if exist('plotly','file') == 2
-%     output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
-%     if strcmp(output,'Yes')
-%         save_dir = uigetdir('select directory to save html files','save in');
-%         if ~isempty(save_dir)
-%             cd(save_dir)
-%             try
-%                 fig2plotly(gcf,'strip',true,'offline', true);
-%             catch
-%                 fig2plotly(gcf,'strip',true); % in case local lib not available
-%             end
-%         else
-%             return
-%         end
-%     else
-%         return
-%     end
-% end
 
