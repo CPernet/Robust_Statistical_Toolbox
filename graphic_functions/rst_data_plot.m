@@ -27,6 +27,7 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 % see also cubehelixmap, rst_outlier, rst_RASH, rst_trimmean, rst_hd
 %
 % Cyril Pernet - The University of Edinburgh
+% Eric Nicholas - The University of Rochester (fixed threshold for similar data points)
 % -------------------------------------------------------------------------
 % Copyright (C) RST Toolbox Team 2015
 
