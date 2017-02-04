@@ -123,9 +123,7 @@ else
 end
 
 for u=1:grouping
-    tic
     tmp = sort(Data(~isnan(Data(:,u)),u));
-<<<<<<< HEAD
     
     if strcmpi(datascatter,'on')
         % find outliers
@@ -165,42 +163,7 @@ for u=1:grouping
             scatter(X(outliers(:,p)==0,p),Y(outliers(:,p)==0,p),S(find(outliers(:,p)==0)),color_scheme(u,:)); hold on
             scatter(X(outliers(:,p)==1,p),Y(outliers(:,p)==1,p),(S(find(outliers(:,p)==1))-(point_size/2)),color_scheme(u,:),'+');
         end
-    end
-=======
-    % create a matrix with spread = 2
-    Y = NaN(length(tmp),2);
-    Y(1,1) = tmp(1);
-    c_index = [2 1];
-    c_thresh = round(range(tmp)/50,1);
-    for c = 2:length(tmp)
-        if tmp(c)-tmp(c-1) < c_thresh
-            Y(c,c_index(1)) = tmp(c);
-            c_index = fliplr(c_index);
-        else
-            Y(c,1) = tmp(c);
-            c_index = [2 1];
-        end    
-    end
-    % find outliers
-    class = rst_outlier(tmp,outlier_method);
-    outliers = find(class);
-    % plot
-    X = repmat([0 within_gp_dispersion],[length(tmp),1]) + gp_index(u);
-    X(isnan(Y)) = NaN;
-    for p=1:size(Y,2)
-        scatter(X(:,p),Y(:,p),point_size,color_scheme(u,:));
-        scatter(X(outliers,p),Y(outliers,p),point_size,color_scheme(u,:),'filled');
-    end
-    toc
-    %% Add the density estimate 
-    % get the kernel
-    [bc,K]=rst_RASH(tmp,100,dist_method);
-    % remove 0s
-    bc(K==0)=[]; K(K==0)= [];
-    % create symmetric values
-    K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
-    high=(K/2); low=(-high);
->>>>>>> cb40d822e6da0fe7e268139303421629bc29a4c9
+    end % end of scatter plot
     
     %% Add the density estimate
     if strcmp(kernel,'on')
@@ -251,12 +214,9 @@ for u=1:grouping
         [~,position] = min(abs(filled(:,1) - qm));
         plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
         qu = rst_hd(tmp,0.75);
-        [~,position] = min(abs(filled(:,1) - qu));
-        plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
         clear xpoints filled
     end
     
-<<<<<<< HEAD
     %% Bayes bootstrap
     
     % sample with replacement from Dirichlet
@@ -276,25 +236,7 @@ for u=1:grouping
         elseif strcmpi(estimator,'Median')
             bb(boot) = rst_hd(resample,.5);
         end
-=======
-    if diff(xpoints(end,:)) > 0.001*(range(xpoints(:,1)))
-        xpoints(end+1,:) = [gp_index(u) gp_index(u)];
-        filled(end+1,:)  = filled(end,:);
-    end   
-    hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
-    set(fillhandle,'LineWidth',2,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
-
-    %% add IQR - using again Harell-Davis Q
-    ql = rst_hd(tmp,0.25);
-    [~,position] = min(abs(filled(:,1) - ql));
-    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
-    if  strcmpi(estimator,'median')
-        qm = est(u);
-    else
-        qm = rst_hd(tmp,0.5);
->>>>>>> cb40d822e6da0fe7e268139303421629bc29a4c9
     end
-    
     sorted_data = sort(bb); % sort bootstrap estimates
     upper_centile = floor(prob_coverage*size(sorted_data,1)); % upper bound
     nCIs = size(sorted_data,1) - upper_centile;
@@ -310,7 +252,6 @@ for u=1:grouping
     rectangle('Position',[X(3),HDI(1,u),X(5)-X(3),HDI(2,u)-HDI(1,u)],'Curvature',[0.4 0.4],'LineWidth',3,'EdgeColor',color_scheme(u,:))
 end
 
-
 %% finish off
 cst = max(abs(diff(Data(:)))) * 0.1;
 plot_min = min(Data(:))-cst;
@@ -325,9 +266,17 @@ axis([0.3 gp_index(grouping)+0.7 plot_min plot_max])
 
 
 if size(Data,1) == 1
-    title(sprintf('Data distribution with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
+    if strcmp('datascatter','on') && strcmp('kernel','off')
+        title(sprintf('Data scatter with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
+    elseif strcmp('kernel','on')
+        title(sprintf('Data distribution with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
+    end
 else
-    title(sprintf('Data distributions with %ss \n and 95%% High Density Intervals',estimator),'FontSize',16);
+    if strcmp('datascatter','on') && strcmp('kernel','off')
+        title(sprintf('Data scatters with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
+    elseif strcmp('kernel','on')
+        title(sprintf('Data distributions with %ss \n and 95%% High Density Intervals',estimator),'FontSize',16);
+    end
 end
 grid on; box on; drawnow
 
@@ -351,7 +300,6 @@ if nargout == 0
     end
 end
 
-<<<<<<< HEAD
 % if exist('plotly','file') == 2
 %     output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
 %     if strcmp(output,'Yes')
@@ -371,23 +319,3 @@ end
 %     end
 % end
 
-=======
-if exist('plotly','file') == 2
-    output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
-    if strcmp(output,'Yes')
-        save_dir = uigetdir('select directory to save html files','save in');
-        if ~isempty(save_dir)
-            cd(save_dir)
-            try
-                fig2plotly(gcf,'strip',true,'offline', true);
-            catch
-                fig2plotly(gcf,'strip',true); % in case local lib not available
-            end
-        else
-            return
-        end
-    else
-        return
-    end
-end
->>>>>>> cb40d822e6da0fe7e268139303421629bc29a4c9
