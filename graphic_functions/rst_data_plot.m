@@ -4,7 +4,7 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
 %
 % FORMAT: [est,HDI]= rst_data_plot(Data,options)
-%         [est,HDI]= rst_data_plot(Data,'between',0.25,'within',0.025,'pointsize',50,'estimator','median','kernel','on')
+%         [est,HDI]= rst_data_plot(Data,'between',0.25,'datascatter','on','bubble','on','within',0.025,'pointsize',50,'estimator','median')
 %         [est,HDI]= rst_data_plot(Data,'between',0.25,'datascatter','off','estimator','median','kernel','on')
 %
 % INPUT: Data is a matrix, data are plotted colmun-wise
@@ -46,6 +46,7 @@ within_gp_dispersion = 0.025;
 point_size = 50;
 kernel = 'on';
 datascatter = 'on';
+bubble = 'on';
 
 % check inputs
 if ~exist('Data','var')
@@ -88,6 +89,8 @@ else
             kernel = cell2mat(varargin(n+1));
         elseif strcmpi(varargin(n),'datascatter')
             datascatter = cell2mat(varargin(n+1));
+        elseif strcmpi(varargin(n),'bubble')
+            bubble = cell2mat(varargin(n+1));
         end
     end
 end
@@ -129,8 +132,8 @@ for u=1:grouping
         outliers = rst_outlier(tmp,outlier_method);
         
         % plot individual data points in Y
-        change = diff(tmp) < (point_size/100); % look for overlapping data points in the display
-        if isempty(find(change))
+        change = diff(tmp) < round(range(tmp)/point_size,1); % look for overlapping data points in the display
+        if strcmp(bubble,'off') || isempty(find(change))
             Y = [tmp tmp]; S = repmat(point_size,[length(tmp),1]);
             Y(1:2:length(tmp),1) = NaN; Y(2:2:length(tmp),2) = NaN;
             outliers = single([outliers outliers]);
