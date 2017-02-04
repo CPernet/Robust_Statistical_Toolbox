@@ -4,14 +4,17 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
 %
 % FORMAT: [est,HDI]= rst_data_plot(Data,options)
-%         [est,HDI]= rst_data_plot(Data,'between',0.25,'within',0.025,'pointsize',50,'estimator','median') 
+%         [est,HDI]= rst_data_plot(Data,'between',0.25,'within',0.025,'pointsize',50,'estimator','median','kernel','on')
+%         [est,HDI]= rst_data_plot(Data,'between',0.25,'datascatter','off','estimator','median','kernel','on')
 %
 % INPUT: Data is a matrix, data are plotted colmun-wise
-%        options are 
+%        options are
 %                'between' for the distance between distributions
 %                'within' for the distance/width between points in a group
 %                'point_size' the size of data points
-%                'estimator' can be 'median', 'mean', 'trimmed mean' 
+%                'estimator' can be 'median', 'mean', 'trimmed mean'
+%                'kernel' can be 'on' (default) or 'off' to add distribution
+%
 % OUTPUT: est is the summary statistics
 %         HDI the 95% High Density Interval (Bayes bootstrap)
 %         Ouliers is a binary matrix indicating S-outliers
@@ -19,7 +22,7 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 %
 % example: Data = [randn(100,1) randg(1,100,1) randn(100,1) 1-randg(1,100,1)];
 %          Data(50:55,1) = NaN; Data(90:100,2) = NaN;
-%          [est,HDI]=rst_data_plot(Data,'between',0.25,'within',0.025,'pointsize',50,'estimator','median')
+%          [est,HDI]=rst_data_plot(Data,'between',0.25,'within',0.025,'pointsize',50,'estimator','median','kernel','off')
 %
 % see also cubehelixmap, rst_outlier, rst_RASH, rst_trimmean, rst_hd
 %
@@ -30,17 +33,19 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 %% Defaults
 
 % hard coded
-Nb = 1000;              % number of bootstrap samples 
+Nb = 1000;              % number of bootstrap samples
 prob_coverage = 95/100; % prob coverage of the HDI
 outlier_method = 3;     % 1 MAD-median rule, 2 small sample adjusted, 3 S-outliers
 dist_method = 'RASH';   % Random Average Shifted Histogram, could also be ASH
 trimming = 20;          % 20% trimming each side of the distribution
-decile = .5;            % Median estimated using the 5th decile of Harell Davis 
+decile = .5;            % Median estimated using the 5th decile of Harell Davis
 
 % soft coded, see options
 between_gp_dispersion = 0.25;
 within_gp_dispersion = 0.025;
 point_size = 50;
+kernel = 'on';
+datascatter = 'on';
 
 % check inputs
 if ~exist('Data','var')
@@ -79,6 +84,10 @@ else
             else
                 estimator = cell2mat(varargin(n+1));
             end
+        elseif strcmpi(varargin(n),'kernel')
+            kernel = cell2mat(varargin(n+1));
+        elseif strcmpi(varargin(n),'datascatter')
+            datascatter = cell2mat(varargin(n+1));
         end
     end
 end
@@ -87,136 +96,157 @@ end
 grouping = size(Data,2);
 gp_index = 1:(1+between_gp_dispersion):(grouping*(1+between_gp_dispersion));
 
-%% Summary stat 
+%% Summary stat
 if strcmpi(estimator,'Mean')
     est = nanmean(Data,1);
 elseif strcmpi(estimator,'Trimmed mean')
-    est = rst_trimmean(Data,trimming); 
+    est = rst_trimmean(Data,trimming);
 elseif strcmpi(estimator,'Median')
     est = rst_hd(Data,decile); % Median estimated using the 5th decile of Harell Davis
 end
-
-%% Bayes bootstrap
-
-% sample with replcaement from Dirichlet
-% sampling = number of observations, e.g. participants
-n=size(Data,1); 
-bb = zeros(Nb,grouping);
-for boot=1:Nb % bootstrap loop
-    theta = exprnd(1,[n,1]);
-    weigths = theta ./ repmat(sum(theta),n,1);
-    resample = (datasample(Data,n,'Replace',true,'Weights',weigths));
-    
-    % compute the estimator
-    if strcmpi(estimator,'Mean')
-        bb(boot,:) = nanmean(resample,1);
-    elseif strcmpi(estimator,'Trimmed Mean')
-        bb(boot,:) = rst_trimmean(resample,20); 
-    elseif strcmpi(estimator,'Median')
-        bb(boot,:) = rst_hd(resample,.5); 
-    end
-end
-
-sorted_data = sort(bb,1); % sort bootstrap estimates
-upper_centile = floor(prob_coverage*size(sorted_data,1)); % upper bound
-nCIs = size(sorted_data,1) - upper_centile;
-HDI = zeros(2,grouping);
+HDI = zeros(2,grouping); % placeholder for CI
 
 %% start
 figure; hold on
 
 %% select color scheme
-color_scheme = cubehelixmap('semi_continuous',grouping+1);
+color_scheme = cubehelixmap('semi_continuous',grouping+2);
 
 %% Scatter plot of the data with automatic spread
 % scatter plot parameters
 
+if strcmp(kernel,'on')
+    disp('Computing distribution kernels and plotting ...')
+else
+    disp('start plotting ...')
+end
+
 for u=1:grouping
     tmp = sort(Data(~isnan(Data(:,u)),u));
-    % creater a matrix with spread = 2
-    change = find(diff(tmp) < 0.1);
-    Y = NaN(length(tmp),2);
-    Y(1:change(1),1) = tmp(1:change(1));
-    c_index = 2;
-    for c=2:length(change)
-        Y((change(c-1)+1):change(c),c_index) = tmp((change(c-1)+1):change(c));
-        if mod(c,2) == 0
-            c_index = 1;
+    
+    if strcmpi(datascatter,'on')
+        % find outliers
+        outliers = rst_outlier(tmp,outlier_method);
+        
+        % plot individual data points in Y
+        change = diff(tmp) < (point_size/100); % look for overlapping data points in the display
+        if isempty(find(change))
+            Y = [tmp tmp]; S = repmat(point_size,[length(tmp),1]);
+            Y(1:2:length(tmp),1) = NaN; Y(2:2:length(tmp),2) = NaN;
+            outliers = single([outliers outliers]);
+            outliers(1:2:length(tmp),1) = NaN; outliers(2:2:length(tmp),2) = NaN;
         else
-            c_index = 2;
+            tmp(logical([0;change])) = []; Y = [tmp tmp];
+            Y(1:2:length(tmp),1) = NaN; Y(2:2:length(tmp),2) = NaN;
+            outliers(logical([0;change])) = []; outliers = single([outliers outliers]);
+            outliers(1:2:length(outliers),1) = NaN; outliers(2:2:length(outliers),2) = NaN;
+            S = NaN(size(Y,1),1); S(1) = point_size; y_index = 2;
+            for c=2:length(change)
+                if change(c-1) % if same y, make the size bigger by 1/10 + a cst based on the log of N unique observations
+                    if isnan(S(y_index))
+                        S(y_index) = S(y_index-1)+log(length(tmp))+(point_size/10);
+                    else
+                        S(y_index) = S(y_index)+log(length(tmp))+(point_size/10);
+                    end
+                else
+                    y_index = y_index+1;
+                    S(y_index) = point_size;
+                end
+            end
+            S(isnan(S)) = point_size; % if we jump a y_index (typically for c=2)
+        end
+        
+        % plot
+        X = repmat([-within_gp_dispersion/2 within_gp_dispersion/2],[length(tmp),1]) + gp_index(u);
+        for p=1:size(Y,2)
+            scatter(X(outliers(:,p)==0,p),Y(outliers(:,p)==0,p),S(find(outliers(:,p)==0)),color_scheme(u,:)); hold on
+            scatter(X(outliers(:,p)==1,p),Y(outliers(:,p)==1,p),(S(find(outliers(:,p)==1))-(point_size/2)),color_scheme(u,:),'+');
         end
     end
-    Y((change(c)+1):length(tmp),c_index) = tmp((change(c)+1):length(tmp));
-    % find outliers
-    class = rst_outlier(tmp,outlier_method);
-    outliers = find(class);
-    % plot
-    X = repmat([0 within_gp_dispersion],[length(tmp),1]) + gp_index(u);
-    X(isnan(Y)) = NaN;
-    for p=1:size(Y,2)
-        scatter(X(:,p),Y(:,p),point_size,color_scheme(u,:));
-        scatter(X(outliers,p),Y(outliers,p),point_size,color_scheme(u,:),'filled');
+    
+    %% Add the density estimate
+    if strcmp(kernel,'on')
+        % get the kernel
+        [bc,K]=rst_RASH(tmp,100,dist_method);
+        % remove 0s
+        bc(K==0)=[]; K(K==0)= [];
+        % create symmetric values
+        K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
+        high=(K/2); low=(-high);
+        
+        % plot contours
+        y1 = plot(high+gp_index(u),bc); set(y1,'Color',color_scheme(u,:)); hold on
+        y2 = plot(low+gp_index(u),bc); set(y1,'Color',color_scheme(u,:));
+        if isnumeric(y1)
+            y1 = get(y1); y2 = get(y2); % old fashion matlab
+        end
+        % fill
+        xpoints=[y2.XData',y1.XData']; filled=[y2.YData',y1.YData'];
+        % check that we have continuous data, otherwise 0 pad
+        if diff(xpoints(1,:)) > 0.001*(range(xpoints(:,1)))
+            xtmp = NaN(size(xpoints,1)+1,size(xpoints,2));
+            xtmp(1,:) = [gp_index(u) gp_index(u)];
+            xtmp(2:end,:) = xpoints;
+            xpoints = xtmp; clear xtmp
+            ytmp = NaN(size(filled,1)+1,size(filled,2));
+            ytmp(1,:) = filled(1,:);
+            ytmp(2:end,:) = filled;
+            filled = ytmp; clear ytmp
+        end
+        
+        if diff(xpoints(end,:)) > 0.001*(range(xpoints(:,1)))
+            xpoints(end+1,:) = [gp_index(u) gp_index(u)];
+            filled(end+1,:)  = filled(end,:);
+        end
+        hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
+        set(fillhandle,'LineWidth',2,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
+        
+        %% add IQR - using again Harell-Davis Q
+        ql = rst_hd(tmp,0.25);
+        [~,position] = min(abs(filled(:,1) - ql));
+        plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+        if  strcmpi(estimator,'median')
+            qm = est(u);
+        else
+            qu = rst_hd(tmp,0.5);
+        end
+        [~,position] = min(abs(filled(:,1) - qm));
+        plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+        qu = rst_hd(tmp,0.75);
+        [~,position] = min(abs(filled(:,1) - qu));
+        plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
+        clear xpoints filled
     end
     
-    %% Add the density estimate 
-    % get the kernel
-    [bc,K]=rst_RASH(tmp,100,dist_method);
-    % remove 0s
-    bc(K==0)=[]; K(K==0)= [];
-    % create symmetric values
-    K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
-    high=(K/2); low=(-high);
+    %% Bayes bootstrap
     
-    % plot contours
-    y1 = plot(high+gp_index(u),bc); set(y1,'Color',color_scheme(u,:)); hold on
-    y2 = plot(low+gp_index(u),bc); set(y1,'Color',color_scheme(u,:));
-    if isnumeric(y1)
-        y1 = get(y1); y2 = get(y2); % old fashion matlab
-    end
-    % fill
-    xpoints=[y2.XData',y1.XData']; filled=[y2.YData',y1.YData'];
-    % check that we have continuous data, otherwise 0 pad
-    if diff(xpoints(1,:)) > 0.001*(range(xpoints(:,1)))
-        xtmp = NaN(size(xpoints,1)+1,size(xpoints,2));
-        xtmp(1,:) = [gp_index(u) gp_index(u)];
-        xtmp(2:end,:) = xpoints;
-        xpoints = xtmp; clear xtmp
-        ytmp = NaN(size(filled,1)+1,size(filled,2));
-        ytmp(1,:) = filled(1,:);
-        ytmp(2:end,:) = filled;
-        filled = ytmp; clear ytmp        
+    % sample with replacement from Dirichlet
+    % sampling = number of observations
+    n=size(tmp,1); bb = zeros(Nb,1);
+    fprintf('Computing Bayesian Bootstrap for HDI in group %g/%g\n',u,grouping)
+    for boot=1:Nb % bootstrap loop
+        theta = exprnd(1,[n,1]);
+        weigths = theta ./ repmat(sum(theta),n,1);
+        resample = (datasample(tmp,n,'Replace',true,'Weights',weigths));
+        
+        % compute the estimator
+        if strcmpi(estimator,'Mean')
+            bb(boot) = nanmean(resample,1);
+        elseif strcmpi(estimator,'Trimmed Mean')
+            bb(boot) = rst_trimmean(resample,20);
+        elseif strcmpi(estimator,'Median')
+            bb(boot) = rst_hd(resample,.5);
+        end
     end
     
-    if diff(xpoints(end,:)) > 0.001*(range(xpoints(:,1)))
-        xpoints(end+1,:) = [gp_index(u) gp_index(u)];
-        filled(end+1,:)  = filled(end,:);
-    end   
-    hold on; fillhandle=fill(xpoints,filled,color_scheme(u,:));
-    set(fillhandle,'LineWidth',2,'EdgeColor',color_scheme(u,:),'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
-
-    %% add IQR - using again Harell-Davis Q
-    ql = rst_hd(tmp,0.25);
-    [~,position] = min(abs(filled(:,1) - ql));
-    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
-    if  strcmpi(estimator,'median')
-        qm = est(u);
-    else
-        qu = rst_hd(tmp,0.5);
-    end
-    [~,position] = min(abs(filled(:,1) - qm));
-    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
-    qu = rst_hd(tmp,0.75);
-    [~,position] = min(abs(filled(:,1) - qu));
-    plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));
-    clear xpoints filled
-    
-    %% Hight Density Intervals
-    tmp = sorted_data(:,u);
-    ci = 1:nCIs; ciWidth = tmp(ci+upper_centile) - tmp(ci); % all centile distances
+    sorted_data = sort(bb); % sort bootstrap estimates
+    upper_centile = floor(prob_coverage*size(sorted_data,1)); % upper bound
+    nCIs = size(sorted_data,1) - upper_centile;
+    ci = 1:nCIs; ciWidth = sorted_data(ci+upper_centile) - sorted_data(ci); % all centile distances
     [~,index]=find(ciWidth == min(ciWidth)); % densest centile
     if length(index) > 1; index = index(1); end % many similar values
-    HDI(1,u) = tmp(index);
-    HDI(2,u) = tmp(index+upper_centile);
+    HDI(1,u) = sorted_data(index);
+    HDI(2,u) = sorted_data(index+upper_centile);
     
     % plot this with a rectangle
     X = (gp_index(u)-0.3):0.1:(gp_index(u)+0.3);
@@ -227,12 +257,21 @@ end
 
 %% finish off
 cst = max(abs(diff(Data(:)))) * 0.1;
-axis([0.3 gp_index(grouping)+0.7 min(Data(:))-cst max(Data(:))+cst])    
+plot_min = min(Data(:))-cst;
+if min(HDI(1,:)) < plot_min
+    plot_min = min(HDI(1,:));
+end
+plot_max = max(Data(:))+cst;
+if max(HDI(2,:)) > plot_max
+    plot_max = max(HDI(2,:));
+end
+axis([0.3 gp_index(grouping)+0.7 plot_min plot_max])
+
 
 if size(Data,1) == 1
-    title(sprintf('Data distribution with %s and 95%% High Density Interval',estimator),'FontSize',16);
+    title(sprintf('Data distribution with %s \n and 95%% High Density Interval',estimator),'FontSize',16);
 else
-    title(sprintf('Data distributions with %ss and 95%% High Density Intervals',estimator),'FontSize',16);
+    title(sprintf('Data distributions with %ss \n and 95%% High Density Intervals',estimator),'FontSize',16);
 end
 grid on; box on; drawnow
 
@@ -256,22 +295,22 @@ if nargout == 0
     end
 end
 
-if exist('plotly','file') == 2
-    output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
-    if strcmp(output,'Yes')
-        save_dir = uigetdir('select directory to save html files','save in');
-        if ~isempty(save_dir)
-            cd(save_dir)
-            try
-                fig2plotly(gcf,'strip',true,'offline', true);
-            catch
-                fig2plotly(gcf,'strip',true); % in case local lib not available
-            end
-        else
-            return
-        end
-    else
-        return
-    end
-end
+% if exist('plotly','file') == 2
+%     output = questdlg('Do you want to output this graph with Plotly?', 'Plotly option');
+%     if strcmp(output,'Yes')
+%         save_dir = uigetdir('select directory to save html files','save in');
+%         if ~isempty(save_dir)
+%             cd(save_dir)
+%             try
+%                 fig2plotly(gcf,'strip',true,'offline', true);
+%             catch
+%                 fig2plotly(gcf,'strip',true); % in case local lib not available
+%             end
+%         else
+%             return
+%         end
+%     else
+%         return
+%     end
+% end
 
