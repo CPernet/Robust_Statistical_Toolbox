@@ -27,7 +27,6 @@ function [est,HDI]=rst_data_plot(Data,varargin)
 % see also cubehelixmap, rst_outlier, rst_RASH, rst_trimmean, rst_hd
 %
 % Cyril Pernet - The University of Edinburgh
-% Eric Nicholas - The University of Rochester
 % -------------------------------------------------------------------------
 % Copyright (C) RST Toolbox Team 2015
 
@@ -221,25 +220,27 @@ for u=1:grouping
     
     % sample with replacement from Dirichlet
     % sampling = number of observations
+    tmp = sort(Data(~isnan(Data(:,u)),u));
     n=size(tmp,1); bb = zeros(Nb,1);
     fprintf('Computing Bayesian Bootstrap for HDI in group %g/%g\n',u,grouping)
     for boot=1:Nb % bootstrap loop
         theta = exprnd(1,[n,1]);
         weigths = theta ./ repmat(sum(theta),n,1);
         resample = (datasample(tmp,n,'Replace',true,'Weights',weigths));
-        
+    
         % compute the estimator
         if strcmpi(estimator,'Mean')
             bb(boot) = nanmean(resample,1);
         elseif strcmpi(estimator,'Trimmed Mean')
-            bb(boot) = rst_trimmean(resample,20);
+            bb(boot) = rst_trimmean(resample,trimming);
         elseif strcmpi(estimator,'Median')
-            bb(boot) = rst_hd(resample,.5);
+            bb(boot) = rst_hd(resample,decile);
         end
     end
     sorted_data = sort(bb); % sort bootstrap estimates
     upper_centile = floor(prob_coverage*size(sorted_data,1)); % upper bound
     nCIs = size(sorted_data,1) - upper_centile;
+    
     ci = 1:nCIs; ciWidth = sorted_data(ci+upper_centile) - sorted_data(ci); % all centile distances
     [~,index]=find(ciWidth == min(ciWidth)); % densest centile
     if length(index) > 1; index = index(1); end % many similar values
