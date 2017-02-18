@@ -7,9 +7,8 @@ function [xd yd delta deltaCI] = rst_shifthd(x,y,nboot,plotshift)
 %
 % GAR, University of Glasgow, Dec 2007 
 
-rand('state',sum(100*clock));
-
-if nargin < 3;nboot=200;plotshift=0;end
+rng('shuffle')
+if nargin < 3;nboot=200;plotshift=1;end
 
 nx=length(x);
 ny=length(y);
@@ -20,23 +19,35 @@ c=(80.1./n.^2)+2.73; % The constant c was determined so that the simultaneous
                      % distributions
 
 for d=1:9
-   xd(d) = hd(x,d./10);
-   yd(d) = hd(y,d./10);
-   xd_bse = bootse(x,nboot,'hd',d./10); % bse = bootse(x,nboot,est)
-   yd_bse = bootse(y,nboot,'hd',d./10);
+   xd(d) = rst_hd(x,d./10);
+   yd(d) = rst_hd(y,d./10);
+   xd_bse = rst_bootse(x,'harrell-davis',nboot,d./10); % bse = bootse(x,nboot,est)
+   yd_bse = rst_bootse(y,'harrell-davis',nboot,d./10);
    delta(d) = yd(d)-xd(d);
    deltaCI(d,1) = yd(d)-xd(d)-c.*sqrt(xd_bse.^2+yd_bse.^2);
    deltaCI(d,2) = yd(d)-xd(d)+c.*sqrt(xd_bse.^2+yd_bse.^2);
 end
 
 if plotshift==1
-    figure;set(gcf,'Color','w');hold on
-    plot(xd,yd-xd,'k.',xd,deltaCI(:,1),'r+',xd,deltaCI(:,2),'r+')
-    refline(0,0);
-    xlabel('x (first group)','FontSize',16)
-    ylabel('Delta','FontSize',16)
-    set(gca,'FontSize',14)
-    box on
+    figure;set(gcf,'Color','w');
+    
+    subplot(2,1,1); hold on
+    [bc,K]=rst_RASH(x,100,'ASH');
+    bar(bc,K,1,'FaceColor',[1 0 0],'EdgeColor',[0 0 0],'FaceAlpha',0.5,'EdgeAlpha',0);
+    [bc,K]=rst_RASH(y,100,'ASH');
+    bar(bc,K,1,'FaceColor',[0 1 0],'EdgeColor',[0 1 0],'FaceAlpha',0.5,'EdgeAlpha',0);
+    axis tight; grid on; box on; title('Smoothed Histograms')
+    ylabel('freqency'); xlabel('observations')
+    
+    subplot(2,1,2); hold on
+    plot(xd,yd-xd,'k','LineWidth',3)
+    plot(xd,deltaCI(:,1),'k+',xd,deltaCI(:,2),'k+','LineWidth',2)
+    hold on; fillhandle=fill([xd fliplr(xd)],[deltaCI(:,1)' fliplr(deltaCI(:,2)')],[0 0 0]);
+    set(fillhandle,'LineWidth',2,'EdgeColor',[0 0 0],'FaceAlpha',0.2,'EdgeAlpha',0.8);%set edge color
+    h = refline(0,0); set(h,'LineStyle','--','Color',[0 0 0],'LineWidth',3);
+    xlabel('gp1 deciles (arbitrary unit)','FontSize',12)
+    ylabel('gp1 - gp2 ','FontSize',12)
+    grid on; box on
 end
 
 % Data from Wilcox p.150

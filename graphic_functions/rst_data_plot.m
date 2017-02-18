@@ -212,7 +212,7 @@ for u=1:grouping
         if  strcmpi(estimator,'median')
             qm = est(u);
         else
-            qu = rst_hd(tmp,0.5);
+            qm= rst_hd(tmp,0.5);
         end
         [~,position] = min(abs(filled(:,1) - qm));
         plot(xpoints(position,:),filled(position,:),'Color',color_scheme(u,:));

@@ -60,6 +60,16 @@ clear varargin
 % bar(bc,nu,1,'FaceColor',[0.5 0.5 1]);
 % title('Prob histogram')
 
+% a typooical problem is with data that have a small range like
+% probabilities, the meash is not of the right size or contains
+% to few bins - the silution here is simply to scale the data
+if range(data) <= 1
+    data = data.*10; 
+    scale = 1;
+else
+    scale = 0;
+end
+
 switch type
     case('ASH')
         
@@ -99,6 +109,9 @@ switch type
         end
         K = ASH/(n*h);
         bc = t0+((1:nbin)-0.5)*delta;
+        if scale == 1
+            bc = bc./10;
+        end
         
         if nargout == 0
             figure; bar(bc,K,1,'FaceColor',[0.5 0.5 1]);
@@ -154,6 +167,9 @@ switch type
         bc = t0+((1:nbin)-0.5)*delta;
         offset = min(bc)-min(data);
         bc = bc - offset;
+        if scale == 1
+            bc = bc./10;
+        end
         
         if nargout == 0
             figure; bar(bc,K,1,'FaceColor',[0.5 0.5 1]);
