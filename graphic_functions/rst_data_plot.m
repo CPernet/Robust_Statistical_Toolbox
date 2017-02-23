@@ -111,7 +111,8 @@ end
 HDI = zeros(2,grouping); % placeholder for CI
 
 %% start
-figure; hold on
+%figure; 
+hold on
 
 %% select color scheme
 color_scheme = cubehelixmap('semi_continuous',grouping+2);

@@ -1,6 +1,6 @@
 function [h,M,CI,p] = rst_2ttest(varargin)
 
-% performs a robust two samplea test, ie a percentile bootstrap on the
+% performs a robust two samples test, ie a percentile bootstrap on the
 % difference of the estimators
 %
 % FORMAT
