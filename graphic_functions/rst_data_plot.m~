@@ -1,26 +1,24 @@
-function [est,HDI,KDE]=rst_data_plot(Data,varargin)
+function [est,HDI]=rst_data_plot(Data,varargin)
 
 % plots the data split by groups showing each data points with the
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
 %
-% FORMAT: [est,HDI,KDE]= rst_data_plot(Data,options)
-%         [est,HDI,KDE]= rst_data_plot(Data,'between',0.25,'datascatter','on','bubble','on','within',0.025,'pointsize',50,'newfig','yes')
-%         [est,HDI]= rst_data_plot(Data,'estimator','median','kernel','off','newfig','no')
+% FORMAT: [est,HDI]= rst_data_plot(Data,options)
+%         [est,HDI]= rst_data_plot(Data,'between',0.25,'datascatter','on','bubble','on','within',0.025,'pointsize',50,'kernel','on')
+%         [est,HDI]= rst_data_plot(Data,'estimator','median','kernel','on')
 %
 % INPUT: Data is a matrix, data are plotted colmun-wise
 %        options are
 %                'between' for the distance between distributions
 %                'within' for the distance/width between points in a group
 %                'point_size' the size of data points
-%                'newfig' 'yes' or 'no' to plot in a new figure or the
-%                          current one (useful for subplots)
 %                'estimator' can be 'median', 'mean', 'trimmed mean'
 %                'kernel' can be 'on' (default) or 'off' to add distribution
 %
 % OUTPUT: est is the summary statistics
 %         HDI the 95% High Density Interval (Bayes bootstrap)
 %         Ouliers is a binary matrix indicating S-outliers
-%         KDE is the kernel density estimated (returns bins and frequencies)
+%         KDE is the hernel density estimated (returns bins and frequencies)
 %
 % example: Data = [randn(100,1) randg(1,100,1) randn(100,1) 1-randg(1,100,1)];
 %          Data(50:55,1) = NaN; Data(90:100,2) = NaN;
@@ -50,7 +48,6 @@ point_size = 50;
 kernel = 'on';
 datascatter = 'on';
 bubble = 'on';
-newfig = 'yes';
 
 % check inputs
 if ~exist('Data','var')
@@ -95,8 +92,6 @@ else
             datascatter = cell2mat(varargin(n+1));
         elseif strcmpi(varargin(n),'bubble')
             bubble = cell2mat(varargin(n+1));
-        elseif strcmpi(varargin(n),'newfig')
-            newfig = cell2mat(varargin(n+1));
         end
     end
 end
@@ -116,9 +111,7 @@ end
 HDI = zeros(2,grouping); % placeholder for CI
 
 %% start
-if strcmpi(newfig,'yes')
-    figure; 
-end
+%figure; 
 hold on
 
 %% select color scheme
