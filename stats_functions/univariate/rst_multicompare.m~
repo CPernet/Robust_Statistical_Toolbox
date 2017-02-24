@@ -10,7 +10,7 @@ function [diff,CI_boot,p,h]= rst_multicompare(Data,Pairs,varargin)
 % Data      = 2D matrix (n*p) of repeated measures
 % pairs     = matrix 2*n for which pairs to test ([] means all)
 % alphav    = 5% (default) or 10%
-% estimator = which estimator to use 'mean','median' (Harell-Davis) or 'trimmed mean'
+% estimator = which estimator to use 'mean','median', or 'trimmed mean'
 % newfig    = 'yes' or 'no' allows to plot within an existing one 
 %
 % OUTPUT
