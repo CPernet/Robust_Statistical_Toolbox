@@ -44,8 +44,8 @@ if nargout == 0
     bar(x,nu/(length(data)*h),1,'FaceColor',[0.5 0.5 1]);
     grid on; hold on; % axis('tight');
     plot(xp,yp,'r','LineWidth',3);
-    xlabel(units,'FontSize',12); ylabel('Freq.','FontSize',12)
-    title({['Density Histrogram']; ['and Density Estimate']},'FontSize',14); % ,'FontWeight','demi')
+    xlabel(units,'FontSize',10); ylabel('Freq.','FontSize',10)
+    title({['Density Histogram']; ['and Density Estimate']},'FontSize',12); % ,'FontWeight','demi')
 end
 
 
