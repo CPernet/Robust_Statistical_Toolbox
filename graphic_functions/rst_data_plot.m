@@ -141,7 +141,7 @@ for u=1:grouping
         outliers = rst_outlier(tmp,outlier_method);
         
         % plot individual data points in Y
-        change = diff(tmp) < round(range(tmp)/point_size,1); % look for overlapping data points in the display
+        change = diff(tmp) < round(range(tmp)/point_size); % look for overlapping data points in the display
         if strcmp(bubble,'off') || isempty(find(change))
             Y = [tmp tmp]; S = repmat(point_size,[length(tmp),1]);
             Y(1:2:length(tmp),1) = NaN; Y(2:2:length(tmp),2) = NaN;
