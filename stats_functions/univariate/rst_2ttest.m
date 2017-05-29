@@ -113,6 +113,9 @@ for c=1:size(gp1,2)
     
     pb = sum(m{c} > 0) / nboot;
     p(c) = 2*min(pb,1-pb);
+    if p(c) == 0
+       p(c) = 1/nboot; 
+    end
 end
 
 h = p<alphav;
