@@ -1,4 +1,4 @@
-function [est,HDI,KDE]=rst_data_plot(Data,varargin)
+function [est,HDI,K]=rst_data_plot(Data,varargin)
 
 % plots the data split by groups showing each data points with the
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
@@ -90,7 +90,7 @@ else
                 estimator = cell2mat(varargin(n+1));
             end
         elseif strcmpi(varargin(n),'kernel')
-            kernel = cell2mat(varargin(n+1));
+            kernel = cell2mat(varargin(n+1)); K = [];
         elseif strcmpi(varargin(n),'datascatter')
             datascatter = cell2mat(varargin(n+1));
         elseif strcmpi(varargin(n),'bubble')
@@ -102,7 +102,11 @@ else
 end
 
 %% how many groups
-grouping = size(Data,2);
+[N,grouping] = size(Data);
+if N == 1 && grouping > 1
+    Data = Data';
+    [N,grouping] = size(Data);
+end
 gp_index = 1:(1+between_gp_dispersion):(grouping*(1+between_gp_dispersion));
 
 %% Summary stat
@@ -141,7 +145,7 @@ for u=1:grouping
         outliers = rst_outlier(tmp,outlier_method);
         
         % plot individual data points in Y
-        change = diff(tmp) < round(range(tmp)/point_size,1); % look for overlapping data points in the display
+        change = diff(tmp) < round(range(tmp)/point_size); % look for overlapping data points in the display
         if strcmp(bubble,'off') || isempty(find(change))
             Y = [tmp tmp]; S = repmat(point_size,[length(tmp),1]);
             Y(1:2:length(tmp),1) = NaN; Y(2:2:length(tmp),2) = NaN;
@@ -175,7 +179,7 @@ for u=1:grouping
             scatter(X(outliers(:,p)==1,p),Y(outliers(:,p)==1,p),(S(find(outliers(:,p)==1))-(point_size/2)),color_scheme(u,:),'+');
         end
     end % end of scatter plot
-    
+     
     %% Add the density estimate
     if strcmp(kernel,'on')
         % get the kernel
