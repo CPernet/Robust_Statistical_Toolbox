@@ -35,23 +35,23 @@ if p==1 % if X row vector, transpose to column
 end
 q=.5; % median
 nboot = 1000; % use for 95% CI
+alphav = 5/100; % for percentile bootstrap when n<11
 
 if nargout == 1 && nargin > 2
     disp('too many arguments in, only the 2 first ones will be used')
 elseif nargout == 1 && nargin == 2
     q = varargin{2};
 elseif nargout == 2
-    if p<=10
-        error('confidence intervals of the hd estimates of the deciles cannot be computed for less than 11 observations')
-    end
     rng shuffle
     if nargin >1; q = varargin{2}; end
     if nargin >2; nboot = varargin{3}; end
 end
 
 %% compute
+table = randi(p,p,nboot);
 for i=1:N
-    x = X(~isnan(X(:,i)),i);
+    nanindex = isnan(X(:,i));
+    x = X(~nanindex,i);
     HDQ(i) = get_HD(x,q);
     
     if nargout == 2
@@ -60,25 +60,50 @@ for i=1:N
         % approximately 95% when sampling from normal and
         % non-normal distributions
         n=length(x);
-        c = 1.96 + .5064.* (n.^-.25);
         
         if n<=10
-            error(sprintf('confidence intervals of the hd estimates of the deciles cannot be computed \n for less than 11 observations, error column %g',i))
-        elseif n <=21 &&  q<=.2 || n <=21 && q>=.8
-            c = -6.23./n+5.01;
-        elseif n<=40 && q<=.1 || n<=40 && q>=.9
-            c = 36.2./n+1.31;
+            sprintf('confidence intervals of the %g hd estimate of the deciles cannot be computed \n for less than 11, switching to percentile boostrap',i)
+             
+            for kk=1:nboot
+                if sum(nanindex) ~=0
+                    values = find(nanindex);
+                    tmp = table(:,kk);
+                    for l=1:length(values)
+                       tmp(tmp==values(l))=[];
+                    end
+                    D = X(tmp,i);
+                else
+                    D = X(table(:,kk),i) ; % applies the sample resampling for each column
+                end
+                Mb(kk) = rst_hd(D,.5);
+            end
+            
+            Mb = sort(Mb);
+            Mb(isnan(Mb)) = [];
+            low = round((alphav*length(Mb))/2);
+            high = length(Mb) - low;
+            CIQ(1,i) = Mb(low+1); 
+            CIQ(2,i) = Mb(high);
+            
+        else
+            if n <=21 &&  q<=.2 || n <=21 && q>=.8
+                c = -6.23./n+5.01;
+            elseif n<=40 && q<=.1 || n<=40 && q>=.9
+                c = 36.2./n+1.31;
+            else
+                c = 1.96 + .5064.* (n.^-.25);
+            end
+            
+            % do bootstrap
+            for kk=1:nboot
+                boot(kk)=get_HD(randsample(x,n,true),q);
+            end
+            bse = std(boot,0); % normalize by (n-1)
+            CIQ(1,i) = HDQ(i)-c.*bse;
+            CIQ(2,i) = HDQ(i)+c.*bse;
         end
-        
-        % do bootstrap
-        for kk=1:nboot
-            boot(kk)=get_HD(randsample(x,n,true),q);
-        end
-        bse = std(boot,0); % normalize by (n-1)
-        CIQ(1,i) = HDQ(i)-c.*bse;
-        CIQ(2,i) = HDQ(i)+c.*bse;
+        clear x n c boot bse
     end
-    clear x n c boot bse
 end
 
 end
