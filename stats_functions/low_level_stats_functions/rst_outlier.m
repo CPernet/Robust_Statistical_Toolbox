@@ -14,18 +14,17 @@ function [class,distance] = rst_outlier(data,method)
 %
 % Methods 1/2 - this is similar, in spirit, to reject data points located above 2
 % standard deviations - however, using std is biased because by definition
-% the mean and the std are affected by the outlier(s); instead one rely on
-% the median and the deviation to the median (mad). We then apply a
-% consistency factor so the mad estimates the std and find the outliers
-% as data points above a given limit (the 75th quantile of the
-% distribution)
+% the mean and the std are affected by the outlier(s); instead one relies on
+% the median and the deviation from the median (mad). We then apply a consistency
+% factor so the MAD estimates the std and find the outliers as data points above 
+% a given limit (the 75th quantile of the distribution).
 %
-% Method 3 allows to detect outliers in the data using a S estimator
-% Like the MAD, the S estimator is robust and relies on the median of
-% absolute distances. However, MAD relies on the distance to the median
-% whereas S relies on the median of absolute distances. Because it doesn't
-% rely on an estimator of central tendency (like the MAD) it works well for
-% non symmetric distributons
+% Method 3 allows to detect outliers in the data using a S estimator. 
+% Like the MAD, the S estimator is robust and relies on the median of absolute
+% distances. However, MAD relies on the distance from the median whereas S 
+% relies on the median of all pair-wise distances. Because it doesn't rely on
+% an estimator of central tendency (like the MAD) it works well for
+% non symmetric distributons.
 %
 % Ref. Rousseeuw, P.J. and Croux C. (1993). Alternatives to the the median
 % absolute deviation. Journal of the American Statistical Association, 88
@@ -34,8 +33,22 @@ function [class,distance] = rst_outlier(data,method)
 % Cyril Pernet v1 - May 2012
 % -----------------------------
 
-%% varargin
+%% default outlier limit parameter k
+
+% The default value for outliers is 2 std, i.e. 34.1%+13.6%=47.7% of the 
+% data; since the distribution is symmetric that's 2*47.7, that's 95.4%
+% k = sqrt(chi2inv(0.954,1));
+
+% We can similarly propose to define outliers as beyond 12.5% of any
+% distribution, i.e. 25% of data. For quantiles, this is equivalent to 
+% 2 std (median is 50%, so take 25%, then add another 12.5%,
+% that's 2 'std' ie a total of 75%).
+
 k = 2.2414; % = sqrt(chi2inv(0.975,1))
+
+%% varargin
+
+
 [n,p]=size(data);
 if nargin < 2
     method = 2;
@@ -85,7 +98,7 @@ switch method
         
     case 2 % Normalized Median Absolute Deviation
         
-        MADN = repmat((MAD./.6745),n,1); % same as MAD.*1.4826 :-)
+        MADN = repmat((MAD./.6745),n,1); % same as MAD.*1.4826 
         class = (abs(data-repmat(M,n,1)) ./ MADN) > k;
         class = class+isnan(data);
         distance = MADN(1,:);
