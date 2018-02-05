@@ -71,6 +71,9 @@ end
 if nargin ==1 
     all_pairs = nchoosek([1:size(Data,2)],2);
 else
+    if size(Pairs,2) ~= 2
+        error('Pairs must be a n*2 matrix')
+    end
     all_pairs = Pairs; clear Pairs;
 end
 L = length(all_pairs);
