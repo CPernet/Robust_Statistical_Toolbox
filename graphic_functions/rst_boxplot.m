@@ -14,13 +14,14 @@ function rst_boxplot(varargin)
 
 data = varargin{1};
 linewidth = 3;
-tmp = jet; boxcolors = tmp(1:floor(64/size(data,2)):64,:); clear tmp
+%tmp = jet; boxcolors = tmp(1:floor(64/size(data,2)):64,:); clear tmp
+boxcolors =  cubehelixmap('semi_continuous',size(data,2)+2);
 boxfillcolors = flipud(boxcolors);
 
 if nargin > 1; linewidth = varargin{2}; end
 if nargin > 2; boxcolors = varargin{3}; end
 if nargin > 3; boxfillcolors = flipud(varargin{4}); end
- 
+
 % plot
 boxplot(data, ...
     'boxstyle','outline', ...
@@ -29,26 +30,24 @@ boxplot(data, ...
     'widths',0.2,...
     'colors',boxcolors);
     
-% set the median
-h = findobj(gca,'Tag','Median');
-for j=1:length(h)
-    set(h(j),'Color','k','LineWidth',2)
-end
-
 % lines
 a = findall(gca,'type','line');
-set(a, 'linewidth',linewidth);
+for l=1:size(a,1)
+    if strcmp(a(l).LineStyle,'-') || strcmp(a(l).LineStyle,'--')
+        set(a(l), 'linewidth',linewidth);
+    end
+end
 
 % box color
 if ~isempty(boxfillcolors)
     h = findobj(gca,'Tag','Box');
     for j=length(h):-1:1
-        patch(get(h(j),'XData'),get(h(j),'YData'),boxfillcolors(j,:),'FaceAlpha',.4);
+        patch(get(h(j),'XData'),get(h(j),'YData'),boxfillcolors(j+2,:),'FaceAlpha',.4);
     end
-end
+end 
 
 % outline
-grid on; set(gca,'LineWidth',2,'FontSize',12,'Layer','Top')
+grid on; set(gca,'FontSize',12,'Layer','Top')
 
 
 
