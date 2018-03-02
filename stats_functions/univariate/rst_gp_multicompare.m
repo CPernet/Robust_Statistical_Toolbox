@@ -199,6 +199,7 @@ if ~strcmpi(estimator,'mean')
         end
     end
     h = h(inverseindex);
+    alphav = alphav(inverseindex);
 end
 
 
