@@ -268,7 +268,7 @@ if plot_option == 1
                 scatter(repmat(i+0.05,n,1),tmp(:,2),50,'k');
                 rectangle('Position',[i-0.2,CI(1,i),0.4,CI(2,i)-CI(1,i)],'Curvature',[0.4 0.4],'LineWidth',2,...
                     'FaceColor',color_scheme(i+8,:),'EdgeColor',[0.35 0.35 0.35]);
-                plot([i-0.2 i+0.2],[nanmedia(data(:,i)) nanmedianmean(data(:,i))],'LineWidth',3,'Color',[0.35 0.35 0.35]);
+                plot([i-0.2 i+0.2],[nanmedian(data(:,i)) nanmedian(data(:,i))],'LineWidth',3,'Color',[0.35 0.35 0.35]);
             end
             
         elseif strcmp(est,'trimmean')
