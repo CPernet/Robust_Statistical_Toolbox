@@ -56,7 +56,7 @@ plothist  = 'no'; % do not create additional histograms of differences
 
 % _check inputs_ 
 if any(size(gp1,2) ~= size(gp2,2))
-    error('input data must be of the same size')
+    error('input data must have the same number of variables')
 else
   [n,p] = size(gp1);    
 end
@@ -191,9 +191,11 @@ if ~strcmpi(estimator,'mean')
     % return h based on adjusted alpha-value
     L = size(gp1,2); h = zeros(L,1);
     [sortedp,order]= sort(p','descend');
+    sortedalphav = alphav(order);
     [~,inverseindex] = sort(order);
+    
     for t=1:L
-        test = sortedp(t) <= alphav(t);
+        test = sortedp(t) <= sortedalphav(t);
         if test == 1
             h(t:L) = 1; break
         end
