@@ -3,9 +3,9 @@ function [est,HDI,K]=rst_data_plot(Data,varargin)
 % plots the data split by groups showing each data points with the
 % distribution and a summary statistics estimator with 95&% Bayes boot HDI
 %
-% FORMAT: [est,HDI,KDE]= rst_data_plot(Data,options)
-%         [est,HDI,KDE]= rst_data_plot(Data,'between',0.25,'datascatter','on','bubble','on','within',0.025,'pointsize',50,'newfig','yes')
-%         [est,HDI]= rst_data_plot(Data,'estimator','median','kernel','off','newfig','no')
+% FORMAT: [est,HDI,KDE] = rst_data_plot(Data,options)
+%         [est,HDI,KDE] = rst_data_plot(Data,'between',0.25,'datascatter','on','bubble','on','within',0.025,'pointsize',50,'newfig','yes')
+%         [est,HDI]     = rst_data_plot(Data,'estimator','median','kernel','off','newfig','no')
 %
 % INPUT: Data is a matrix, data are plotted colmun-wise
 %        options are
@@ -26,7 +26,7 @@ function [est,HDI,K]=rst_data_plot(Data,varargin)
 %          Data(50:55,1) = NaN; Data(90:100,2) = NaN;
 %          [est,HDI]=rst_data_plot(Data,'between',0.25,'within',0.025,'pointsize',50,'estimator','median','kernel','off')
 %
-% see also cubehelixmap, rst_outlier, rst_RASH, rst_trimmean, rst_hd
+% see also rst_outlier, rst_RASH, rst_trimmean, rst_hd, rst_colour_map
 %
 % Cyril Pernet - The University of Edinburgh
 % Eric Nicholas - The University of Rochester (fixed threshold for similar data points)
@@ -126,7 +126,7 @@ end
 hold on
 
 %% select color scheme
-color_scheme = cubehelixmap('semi_continuous',grouping+2);
+color_scheme = rst_colour_maps(grouping);
 
 %% Scatter plot of the data with automatic spread
 % scatter plot parameters
@@ -181,7 +181,7 @@ for u=1:grouping
     end % end of scatter plot
      
     %% Add the density estimate
-    if strcmp(kernel,'on')
+    if strcmp(kernel,'on') && sum(tmp) ~=0
         % get the kernel
         [bc,K]=rst_RASH(tmp,100,dist_method);
         % remove 0s
