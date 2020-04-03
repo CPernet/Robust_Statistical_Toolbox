@@ -209,19 +209,21 @@ if strcmpi(newfig,'yes')
     figure('Name', 'group comparisons'); L = size(gp1,2); 
     set(gcf,'Color','w'); color_scheme = cubehelixmap('semi_continuous',L+10);
     
-    if size(gp1) == size(gp2)
-        D = gp1 - gp2; plot_D = 1;
+    if all(size(gp1) == size(gp2)) && strcmp(estimator,'mean')
+        D = gp1 - gp2; 
+        plot_D = 1;
     else
-    plot_D = 0;
+        plot_D = 0;
     end
+    
     for i=1:L
         rectangle('Position',[i-0.2,CI(1,i),0.4,CI(2,i)-CI(1,i)],'Curvature',[0.4 0.4],'LineWidth',2,...
             'FaceColor',color_scheme(i+8,:),'EdgeColor',[0.35 0.35 0.35]); hold on;
         plot([i-0.2 i+0.2],[diff(i) diff(i)],'LineWidth',3,'Color',[0.35 0.35 0.35]);
         if plot_D == 1
             tmp = repmat(D(:,i),1,2); tmp(1:2:end,1) = NaN; tmp(2:2:end,2) = NaN; 
-        scatter(repmat(i-0.05,n,1),tmp(:,1),50,'k','Filled');
-        scatter(repmat(i+0.05,n,1),tmp(:,2),50,'k','Filled');
+            scatter(repmat(i-0.05,n,1),tmp(:,1),50,'k','Filled');
+            scatter(repmat(i+0.05,n,1),tmp(:,2),50,'k','Filled');
         end
     end
     if strcmpi(estimator,'mean')

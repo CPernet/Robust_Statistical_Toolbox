@@ -23,11 +23,11 @@ list(b,:) = randsample(1:n,n,true);
 end
 
 for d=1:9
-   xd(d) = bat_hd(x,d./10);
-   yd(d) = bat_hd(y,d./10);
+   xd(d) = rst_hd(x,d./10);
+   yd(d) = rst_hd(y,d./10);
    delta(d) = yd(d) - xd(d);
    for b=1:nboot
-      bootdelta(b) = bat_hd(y(list(b,:)),d./10) - bat_hd(x(list(b,:)),d./10); 
+      bootdelta(b) = rst_hd(y(list(b,:)),d./10) - rst_hd(x(list(b,:)),d./10); 
    end
    delta_bse = std(bootdelta,0);
    deltaCI(d,1) = yd(d)-xd(d)-c.*delta_bse;

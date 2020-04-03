@@ -213,7 +213,7 @@ else
     end
     
     % check which direction is the effect
-    % add an execption
+    % add an exception
     for c=1:size(data,2)
         if sum(CI(:,c)) == 0
             p(c) = 1; h(c) = 0;

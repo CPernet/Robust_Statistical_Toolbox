@@ -183,11 +183,11 @@ h = h(inverseindex);
 %% figures
 
 if strcmpi(newfig,'yes')
-    color_scheme = cubehelixmap('semi_continuous',L+10);
+    color_scheme = rst_colour_maps(L);
     figure('Name', 'Pair-wise comparisons');set(gcf,'Color','w')
     for i=1:L
         rectangle('Position',[i-0.2,CI(1,i),0.4,CI(2,i)-CI(1,i)],'Curvature',[0.4 0.4],'LineWidth',2,...
-            'FaceColor',color_scheme(i+8,:),'EdgeColor',[0.35 0.35 0.35]); hold on;
+            'FaceColor',color_scheme(i,:),'EdgeColor',[0.35 0.35 0.35]); hold on;
         plot([i-0.2 i+0.2],[diff(i) diff(i)],'LineWidth',3,'Color',[0.35 0.35 0.35]);
         tmp = repmat(D(:,i),1,2); tmp(1:2:end,1) = NaN; tmp(2:2:end,2) = NaN; 
         scatter(repmat(i-0.05,n,1),tmp(:,1),50,'k','Filled');

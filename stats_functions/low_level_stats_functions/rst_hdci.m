@@ -39,8 +39,8 @@ if n<=10
     error('confidence intervals of the hd estimates of the deciles cannot be computed for less than 11 observations')
 end
        
-   xhd(d) = hd(x,d./10);
-   xd_bse = bootse(x,nboot,'hd',d./10); % bse = bootse(x,nboot,est)
+   xhd(d) = rst_hd(x,d./10);
+   xd_bse = rst_bootse(x,nboot,'hd',d./10); % bse = bootse(x,nboot,est)
    CI(d,1) = xhd(d)-c.*xd_bse;
    CI(d,2) = xhd(d)+c.*xd_bse;
 end

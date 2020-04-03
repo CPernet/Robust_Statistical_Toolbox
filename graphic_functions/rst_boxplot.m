@@ -2,31 +2,68 @@ function rst_boxplot(varargin)
 
 % routine to make box plots specifying several parameters for display
 %
-% FORMAT rst_boxplot(data,linewidth,boxcolors,boxfillcolors)
+% FORMAT rst_boxplot(data,'LineWidth',l,'BoxColors',rgb,'BoxFillColors',rgb,'NewFig','on')
 %
-% INPUT data a matrix of data to plot using box plot
+% INPUT data a n*m matrix of data to plot using box plot
 %       optional:
-%       linewidth the thickness of box and wisker lines
-%       boxcolors a RGB matrix (n*3) of box colors
-%       boxfillcolors a RGB matrix (n*3) of box colors or []
+%       LineWidth the thickness of box and wisker lines (default = 3)
+%       BoxColors a RGB matrix (n*3) of box colors (default from rst_colour_map)
+%       BoxFillColors a RGB matrix (n*3) of box colors or [] (fefault same of BoxColors)
+%       NewFig 'on' (default) or 'off' on plot in current figure
 %
-% Cyril Pernet 02-April-2014
+% Cyril Pernet RS toolbox
+% -----------------------
 
-data = varargin{1};
-linewidth = 3;
-%tmp = jet; boxcolors = tmp(1:floor(64/size(data,2)):64,:); clear tmp
-boxcolors =  cubehelixmap('semi_continuous',size(data,2)+2);
+%% deal with inputs
+data          = varargin{1};
+if ~isnumeric(data)
+    error('1st variable must be numerical')
+end
+linewidth     = 3;
+boxcolors     = rst_colour_maps(size(data,2)+2);
 boxfillcolors = flipud(boxcolors);
+newfig        = 'on';
 
-if nargin > 1; linewidth = varargin{2}; end
-if nargin > 2; boxcolors = varargin{3}; end
-if nargin > 3; boxfillcolors = flipud(varargin{4}); end
+for v=2:nargin
+    if strcmpi(varargin{v},'LineWidth')
+        linewidth = varargin{v+1}; 
+        if any(size(linewidth) == [1 1])
+            warn('LineWidth should be a single value, swithching to default');
+            linewidth = 3;
+        end
+        
+    elseif strcmpi(varargin{v},'BoxColor') || strcmpi(varargin{v},'BoxColour')
+            boxcolors = varargin{v+1}; 
+            if size(boxcolors,1) == 3 && size(boxcolors,2) ~= 3
+                boxcolors = boxcolors';
+            end
+            if size(boxcolors,2) ~= 3
+                warn('BoxColor matrix not recognized, swithing to defaults')
+                boxcolors     = rst_colour_maps(size(data,2)+2);
+            end
+                
+    elseif strcmpi(varargin{v},'BoxColor') || strcmpi(varargin{v},'BoxColour')
+            boxfillcolors = flipud(varargin{v+1});
+            if size(boxfillcolors,1) == 3 && size(boxfillcolors,2) ~= 3
+                boxfillcolors = boxfillcolors';
+            end
+            if size(boxfillcolors,2) ~= size(boxcolors)
+                warn('BoxFillColor matrix not recognized, swithing to defaults')
+                boxfillcolors = flipud(boxcolors);
+            end
+    end
+end
 
-% plot
+%% plot
+
+if strcmpi(newfig,'on')
+    figure('Name','rst boxplot')
+end
+
 boxplot(data, ...
     'boxstyle','outline', ...
     'whisker',1.5, ...
-    'positions',[1:1:size(data,2)], ...
+    'positions',1:1:size(data,2), ...
     'widths',0.2,...
     'colors',boxcolors);
     
@@ -47,7 +84,8 @@ if ~isempty(boxfillcolors)
 end 
 
 % outline
-grid on; set(gca,'FontSize',12,'Layer','Top')
+grid on; box on
+set(gca,'FontSize',12,'Layer','Top')
 
 
 

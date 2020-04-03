@@ -6,6 +6,13 @@ function [RGB]=rst_colour_maps(N_colours)
 % Using the scheme that gives the 1st four colour as colour bind safe
 % For N_colours > 12, sample at equidistance from the xrain colour scale
 % taken from https://github.com/CPernet/brain_colours
+%
+% FORMAT RGB = rst_colour_maps(N_colours)
+% INPUT        N_colours, how many triplets are needed
+% OUTPUT       RGB a N*3 matrix of colour triplets
+%
+% Cyril Pernet - RST toolbox
+% ---------------------------
 
 if N_colours <= 11
     

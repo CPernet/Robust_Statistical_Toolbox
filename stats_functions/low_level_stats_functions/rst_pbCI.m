@@ -32,8 +32,7 @@ function [EST,CI,bootx,p] = rst_pbCI(X,nboot,alphav,est,q,mu)
 
 %% check arguments
 
-rng('shuffle')
-
+rng('default')
 [p,N]=size(X); % number of estimates to compute
 if p==1 % if X row vector, transpose to column
     X=X'; 
