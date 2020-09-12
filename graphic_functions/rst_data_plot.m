@@ -126,7 +126,7 @@ end
 hold on
 
 %% select color scheme
-color_scheme = rst_colour_maps(grouping);
+color_scheme = flipud(rst_colour_maps(grouping));
 
 %% Scatter plot of the data with automatic spread
 % scatter plot parameters
