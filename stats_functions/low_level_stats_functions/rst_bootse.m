@@ -28,8 +28,8 @@ function [bse,CI] = rst_bootse(varargin)
 %% inputs
 
 % defaults
-X = varargin{1};
-est = varargin{2};
+X     = varargin{1};
+est   = varargin{2};
 [p,N] = size(X);
 if p == 1 && N > 2
     X = X';
