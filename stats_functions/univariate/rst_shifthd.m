@@ -53,19 +53,36 @@ if contains(group,'dependent','IgnoreCase',true)
     c = (37./n.^1.4)+2.75; 
     
     % The same set is used for all nine quantiles being compared
-    list = zeros(nboot,n);
-    for b=1:nboot
-        list(b,:) = randsample(1:n,n,true);
-    end
-    
-    for d=9:-1:1
-        xd(d)        = rst_hd(x,d./10);
-        yd(d)        = rst_hd(y,d./10);
-        delta(d)     = yd(d) - xd(d);
-        bootdelta    = rst_hd(y(list),d/10) - rst_hd(x(list),d/10);
-        delta_bse    = std(bootdelta,0);
-        deltaCI(d,1) = yd(d)-xd(d)-c.*delta_bse;
-        deltaCI(d,2) = yd(d)-xd(d)+c.*delta_bse;
+    try
+       list = zeros(nboot,n);
+       for b=1:nboot
+            list(b,:) = randsample(1:n,n,true);
+        end
+        
+        for d=9:-1:1
+            xd(d)        = rst_hd(x,d./10);
+            yd(d)        = rst_hd(y,d./10);
+            delta(d)     = yd(d) - xd(d);
+            bootdelta    = rst_hd(y(list),d/10) - rst_hd(x(list),d/10);
+            delta_bse    = std(bootdelta,0);
+            deltaCI(d,1) = yd(d)-xd(d)-c.*delta_bse;
+            deltaCI(d,2) = yd(d)-xd(d)+c.*delta_bse;
+        end
+    catch mem_issue
+        warning('arrays are too large to map all bootsrtraps at once\n%s',mem_issue.message)
+        disp('computing shift one bootstrap at a time, be patient ... ')
+        for b=1:nboot
+            list = randsample(1:n,n,true)';
+            for d=9:-1:1
+                xd(d)        = rst_hd(x,d./10);
+                yd(d)        = rst_hd(y,d./10);
+                delta(d)     = yd(d) - xd(d);
+                bootdelta    = rst_hd(y(list),d/10) - rst_hd(x(list),d/10);
+                delta_bse    = std(bootdelta,0);
+                deltaCI(d,1) = yd(d)-xd(d)-c.*delta_bse;
+                deltaCI(d,2) = yd(d)-xd(d)+c.*delta_bse;
+            end
+        end
     end
     
 elseif contains(group,'independent','IgnoreCase',true)

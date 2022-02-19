@@ -99,8 +99,8 @@ for in=1:length(varargin)
 end
 
 % non-adjusted confidence intervals
-low = round(nboot.*alphav./2);
-high = nboot - low;
+low        = round(nboot.*alphav./2);
+high       = nboot - low;
 orig_alpha = alphav;
 
 % get the adjusted alpha value
@@ -163,10 +163,11 @@ CI       = [avg_boot(low,:);avg_boot(high,:)]; % get the confidence intervals
 
 %% get the p values and h
 
-pl= sum((avg_boot>0)) / nboot;
-p= 2*(min(pl,1-pl)); % generalized p-value
-p(p==0) = 1/nboot; % check p-values of 0, change to precision
-p(sum(avg_boot,1)==0) = 1; % check special case of 0 difference for all pairs, change to 1
+pl       = sum((avg_boot>0)) / nboot; % p-value
+p       = 2*(min(pl,1-pl));           % generalized p-value
+p(p==0) = 1/nboot;                    % check p-values of 0, change to precision
+% check special case of 0 difference for all pairs, change to 1
+p(sum(avg_boot,1)==0) = 1; 
 
 % return h based on adjusted alpha-value
 h = zeros(L,1);  

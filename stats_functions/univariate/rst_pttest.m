@@ -88,11 +88,11 @@ alphav = alphav / p; % Bonferoni adjustment
 %% compute the difference(s) and call rst_1ttest
 data = X-Y;
 if strcmp(est,'mean')
-    [h,CI,p] = rst_1ttest(data,'mean',0,alphav,nboot);
+    [h,CI,p] = rst_1ttest(data,'estimator','mean','figure','off','newfig','no');
 elseif strcmp(est,'trimmean')
-    [h,CI,p] = rst_1ttest(data,'trimmean',0,alphav,nboot);
+    [h,CI,p] = rst_1ttest(data,'estimator','trimmed mean','figure','off','newfig','no');
 else
-    [h,CI,p] = rst_1ttest(data,'median',0,alphav,nboot);
+    [h,CI,p] = rst_1ttest(data,'estimator','median','figure','off','newfig','no');
 end
  
 %% plot

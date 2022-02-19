@@ -5,18 +5,16 @@ function [h,CI,p] = rst_1ttest(varargin)
 %
 % FORMAT
 % [h,CI] = rst_1ttest(data)
-% [h,CI,p] = rst_1ttest(data,'estimator',plot_option,alpha,nboot)
+% [h,CI,p] = rst_1ttest(data,options)
 %
 % INPUTS
 % - data is either a vector or a matrix, in the latter case tests are
 % performed column wise and the resampling is identical in each column
-% - estimator = 'mean' --> performs a bootstrap-t on the mean
-% - estimator = 'median' --> performs a percentile bootstrap on the median
-%                note the median is the mid decile Harell-Davis estimator
-% - estimator = 'trimmean' --> performs a percentile bootstrap on the 20% trimmean (default)
-% - plot_option indicates to plot the result (1 - default) or not (0)
-% - alpha is the alpha level, default = 5%
-% - nboot is the number of bootstrap, default = 600
+% - options are 'key' and 'value' pairs
+%               'alphav'   : is the alpha level, default = 5%
+%               'estimator': can be 'mean', 'median' or 'trimmed mean'
+%               'figure'   : 'on' (default) or 'off' indicate to plot data and results
+%               'newfig'   : 'yes' (default) or 'no' allows to plot within an existing figure
 %
 % OUTPUTS
 % [h,CI] = rst_1ttest(data,'mean')
@@ -39,36 +37,34 @@ function [h,CI,p] = rst_1ttest(varargin)
 
 
 %% check arguments
-est = 'trimmean';
-trimming = 20/100; % amount of trimming
-alphav = 5/100;
-nboot = 600;
-plot_option = 1;
-data = varargin{1};
 
-if nargin>=1 && nargin<6
-    if nargin >= 2; est = varargin{2}; end
-    EST{1} = 'mean'; EST{2} = 'median'; EST{3} = 'trimmean';
-    if ~ischar(est)
-        error('estimator argument must be a character')
-    elseif isempty(strmatch(est,EST))
-        error('unknown estimator name')
+% _hard coded_
+nboot    = 600; % how many bootstraps are used
+trimming = 20/100; % amount of trimming
+
+% _soft coded_
+alphav    = 5/100; % non adjusted alpha value
+estimator ='trimmed mean'; % by default use a robust estimator
+makefig   = 'yes';
+newfig    = 'yes'; % start a new figure
+
+data = varargin{1};
+for in=1:length(varargin)
+    if strcmpi(varargin(in),'alphav')
+        alphav = cell2mat(varargin(in+1));
+    elseif strcmpi(varargin(in),'estimator')
+        if ~strcmpi(varargin(in+1),'median') && ...
+                ~strcmpi(varargin(in+1),'mean') && ...
+                ~strcmpi(varargin(in+1),'trimmed mean')
+            error(['estimator ' cell2mat(varargin(in+1)) ' is not recognized'])
+        else
+            estimator = cell2mat(varargin(in+1));
+        end
+    elseif strcmpi(varargin(in),'figure')
+        makefig = cell2mat(varargin(in+1));
+    elseif strcmpi(varargin(in),'newfig')
+        newfig = cell2mat(varargin(in+1));
     end
-    
-    if nargin >= 3; plot_option = varargin{3}; end
-    if nargin >= 4; alphav = varargin{4}; end
-    if ~isnumeric(alphav)
-        error('alphav must be a numeric')
-    elseif alphav > 1
-        alphav = alphav / 100;
-    end
-    
-    if nargin == 5; nboot = varargin{5}; end
-    if ~isnumeric(nboot)
-        error('nboot must be a numeric')
-    end
-else
-    error('wrong number of arguments')
 end
 
 % check data
@@ -88,7 +84,7 @@ table = randi(n,n,nboot);
 if p == 1
     D = data(table);
 else
-    for c = 1:p
+    for c = p:-1:1
         v = data(:,c);
         D{c} = v(table); % applies the sample resampling for each column
     end
@@ -97,7 +93,7 @@ end
 
 %% performs a bootstrap-t
 
-if strcmp(est,'mean')
+if strcmp(estimator,'mean')
     
     % bootstrap parameters for symmetric CI
     boot_param = round((1-alphav)*nboot);
@@ -120,7 +116,7 @@ if strcmp(est,'mean')
         CI = [nanmean(data) - C; nanmean(data) + C];
         h  = (CI(1) > 0) + (CI(2) < 0); % lower CI above 0 or higher CI < 0
     else
-        for c = 1:p
+        for c = p:-1:1
             try
                 M = nanmean(D{c});
             catch ME
@@ -159,7 +155,7 @@ else
     high = nboot - low;
     
     % now down to the resampling
-    if strcmp(est,'median')
+    if strcmp(estimator,'median')
         try
             M = rst_hd(data,.5);
         catch ME
@@ -175,7 +171,7 @@ else
             CI = [Mb(low+1) ; Mb(high)];
             pb = sum(Mb<0) / length(Mb);
         else
-            for c = 1:p
+            for c = p:-1:1
                 Mb = sort(rst_hd(D{c},.5));
                 if sum(isnan(Mb)) > 0
                     Mb(find(isnan(Mb))) = [];
@@ -186,7 +182,7 @@ else
                 pb(c) = sum(Mb<0) / length(Mb);
             end
         end
-    elseif strcmp(est,'trimmean')
+    elseif strcmp(estimator,'trimmed mean')
         M = rst_trimmean(data,trimming); % default here as 20% trimmean
         % can only be changed by editing argument at the top
         if p==1
@@ -199,7 +195,7 @@ else
             CI = [Mb(low+1) ; Mb(high)];
             pb = sum(Mb<0) / length(Mb);
         else
-            for c = 1:p
+            for c = p:-1:1
                 Mb = sort(rst_trimmean(D{c},trimming));
                 if sum(isnan(Mb)) > 0
                     Mb(find(isnan(Mb))) = [];
@@ -229,12 +225,16 @@ end
 
 h = logical(h);
 
-if plot_option == 1
+if strcmpi(makefig,'on') || strcmpi(makefig,'yes')
+
+    if strcmpi(newfig,'on') || strcmpi(newfig,'yes')
+        figure('Name', 'One-sample bootstrap t-test')
+        set(gcf,'Color','w');
+    end
     L = size(data,2);
     color_scheme = cubehelixmap('semi_continuous',L+10);
     
-    if strcmp(est,'mean')
-        figure('Name', 'One-sample bootstrap t-test')
+    if strcmp(estimator,'mean')
         ylabel('Mean value','FontSize',14); hold on; grid on
         if p ==1
             title('Mean and 95% CI','FontSize',16); grid on
@@ -253,8 +253,7 @@ if plot_option == 1
         
         
     else
-        figure('Name', 'One-sample percentile t-test')
-        if strcmp(est,'median')
+        if strcmp(estimator,'median')
             ylabel('Median value','FontSize',14); hold on; grid on
             if p ==1
                 title('Median and 95% CI','FontSize',16); grid on
@@ -271,7 +270,7 @@ if plot_option == 1
                 plot([i-0.2 i+0.2],[nanmedian(data(:,i)) nanmedian(data(:,i))],'LineWidth',3,'Color',[0.35 0.35 0.35]);
             end
             
-        elseif strcmp(est,'trimmean')
+        elseif strcmp(estimator,'trimmed mean')
             ylabel('TrimMean value','FontSize',14); hold on; grid on
             if p ==1
                 title('TrimMean and 95% CI','FontSize',16); grid on
@@ -281,11 +280,11 @@ if plot_option == 1
             
             for i=1:L
                 tmp = repmat(data(:,i),1,2); tmp(1:2:end,1) = NaN; tmp(2:2:end,2) = NaN;
-                scatter(repmat(i-0.05,n,1),tmp(:,1),50,'k'); hold on
-                scatter(repmat(i+0.05,n,1),tmp(:,2),50,'k');
                 rectangle('Position',[i-0.2,CI(1,i),0.4,CI(2,i)-CI(1,i)],'Curvature',[0.4 0.4],'LineWidth',2,...
                     'FaceColor',color_scheme(i+8,:),'EdgeColor',[0.35 0.35 0.35]);
                 plot([i-0.2 i+0.2],[rst_trimmean(data(:,i)) rst_trimmean(data(:,i))],'LineWidth',3,'Color',[0.35 0.35 0.35]);
+                scatter(repmat(i-0.05,n,1),tmp(:,1),50,'k'); hold on
+                scatter(repmat(i+0.05,n,1),tmp(:,2),50,'k');
             end
             
             
@@ -304,5 +303,5 @@ if plot_option == 1
     v=axis; ymin = v(3) + (v(4)-v(3))/10;
     set(gcf,'Color','w')
 end
-
+end
 

@@ -1,4 +1,4 @@
-function varargout = rst_rep_anova_plot(Data,factors,gp,alpha)
+function varargout = rst_rep_anova_plot(Data,gp,factors,alpha)
 
 % plots effects for a repeated measure anova
 % plots include confidence intervals for within-subjects
@@ -25,6 +25,8 @@ function varargout = rst_rep_anova_plot(Data,factors,gp,alpha)
 % John Wiley & sons, Inc., NewYork
 %
 % Cyril Pernet 16-08-2011
+
+varargout  = [];
 
 %% basic info about the design
 % -----------------------------

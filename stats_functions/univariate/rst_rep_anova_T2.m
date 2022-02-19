@@ -9,11 +9,11 @@ function result = rst_rep_anova_T2(varargin)
 % (2002) Methods of multivariate analysis John Wiley.
 %
 % FORMAT
-% result = rab_rep_anova_T2(data,gp,factors,nboot)
-% result = rab_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'})
-% result = rab_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'})
-% result = rab_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'},C)
-% result = rab_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'},C,robust)
+% result = rst_rep_anova_T2(data,gp,factors,nboot)
+% result = rst_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'})
+% result = rst_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'})
+% result = rst_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'},C)
+% result = rst_rep_anova_T2(data,gp,factors,nboot,{'name1','name2','etc'},C,robust)
 %
 % INPUT
 % Data:     2D matrix of subjects X factor level. Levels for all factors are
@@ -99,16 +99,12 @@ else
     
     Data = varargin{1};
     gp   = varargin{2};
-    if size(gp,1) ~= size(Data,1)
-        error('data and gp parameter are of different size')
-    elseif size(gp,2) > 1
-        error('Designs with more than 1 between factor are not supported')
-    end
     
     % deal with group structure
     % -------------------------
     if isempty(gp)
         gp = ones(size(Data,1), 1);
+        k  = 1; gp_values = 1;
     else
         gp_values = unique(gp);
         k         = length(gp_values);
@@ -121,10 +117,16 @@ else
         X(:,end) = 1;
     end
     
+    if size(gp,1) ~= size(Data,1)
+        error('data and gp parameter are of different size')
+    elseif size(gp,2) > 1
+        error('Designs with more than 1 between factor are not supported')
+    end
+    
     % other parameters
     % ---------------
     factors = varargin{3};
-    nboot = varargin{4};
+    nboot   = varargin{4};
     if ~isnumeric(nboot)
         error('nboot argument must be numeric')
     elseif nboot < 0
