@@ -58,7 +58,7 @@ function result = rst_rep_anova_T2(varargin)
 % result.names attribute a letter per factor by default
 % result.pboot p value obtained using bootstrap (optional)
 %
-% EXAMPLE result = rep_anova_T2(data,gp,[2 2],0)
+% EXAMPLE result = rst_rep_anova_T2(data,gp,[2 2],0)
 %         data   = [1 2 3 8 5 2 4 8 7 2 4; 1 5 7 9 4 2 6 4 8 3 5; ...
 %                   4 6 8 4 1 8 0 1 4 6 2; 8 9 6 8 5 8 2 7 5 9 4]';
 %           gp   = [1 1 1 1 1 1 2 2 2 2 2]'; % 2 gps with 6 and 5 subjects

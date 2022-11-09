@@ -42,30 +42,41 @@ end
 [n,p]=size(data);
 if n== 1 && p>2 
     data = data'; % transpose row vector in column vector if needed
-    [n,p]=size(data);
+    [~,p]=size(data);
 end
 
 
 %% down to business
-for c=1:p
+for c=p:-1:1
     
     tmp = data(:,c);
     tmp(isnan(tmp)) = [];
     N = size(tmp,1);
-    K=round(N*percent);
+    K = round(N*percent);
     if K == 0
-        error('not enough data points to trim')
+        if p == 1
+            error('not enough data points to trim')
+        else
+           TM(c) = NaN;
+           warning('not enough data points to trim on colomn %g',c)
+        end
+    else
+        X     = sort(tmp,1);
+        TM(c) = mean(X((K+1):(N-K),:),1);
     end
-    X = sort(tmp,1);
-    TM(c) = mean(X((K+1):(N-K),:),1);
-    
+
     %% add robust CI
     if nargout > 1
-        [tv,g] = tvar(tmp,percent*100); % trimmed squared standard error + g trimmed elements
-        se = sqrt(tv); % trimmed standard error
-        df = N - 2.*g - 1; % n-2g = number of observations left after trimming
-        CI(1,c) = TM(c)+tinv(percent./2,df).*se;
-        CI(2,c) = TM(c)-tinv(percent./2,df).*se;
+        if K ~=0
+            [tv,g]  = tvar(tmp,percent*100); % trimmed squared standard error + g trimmed elements
+            se      = sqrt(tv);              % trimmed standard error
+            df      = N - 2.*g - 1;          % n-2g = number of observations left after trimming
+            CI(1,c) = TM(c)+tinv(percent./2,df).*se;
+            CI(2,c) = TM(c)-tinv(percent./2,df).*se;
+        else
+            CI(1,c) = NaN;
+            CI(2,c) = NaN;
+        end
     end 
 end
 
@@ -82,19 +93,19 @@ function [tv,g]=tvar(x,percent)
 % Edit input checks: GA Rousselet - University of Glasgow - Nov 2008
 % Merge function tvar, winvar, winsample - C Pernet June 2010
 
-g=floor((percent/100)*size(x,1));
-xsort=sort(x,1);
-loval=xsort(g+1,:);
-hival=xsort(size(x,1)-g,:);
-for i=1:size(x,2)
-    x(find(x(i,:)<=loval(i)),i) = loval(i); % instead of trimming like in TM(c) we substutute values
-    x(find(x(i,:)>=hival(i)),i) = hival(i);
-    wv(i)=var(x(:,i));
+g     = floor((percent/100)*size(x,1));
+xsort = sort(x,1);
+loval = xsort(g+1,:);
+hival = xsort(size(x,1)-g,:);
+for i = size(x,2):-1:1
+    x(find(x(i,:) <= loval(i)),i) = loval(i); % instead of trimming like in TM(c) we substutute values
+    x(find(x(i,:) >= hival(i)),i) = hival(i); %#ok<*FNDSB> 
+    wv(i)         =  var(x(:,i));
 end
-k=(1-2*percent/100)^2;
-tv=wv/(k*length(x));
+k  = (1-2*percent/100)^2;
+tv = wv/(k*length(x));
+end
 
-end
 
 
 
