@@ -209,6 +209,7 @@ for u=1:grouping
     end
     outliers = rst_outlier(tmp,outlier_method); % find outliers
     OUT(~isnan(Data(:,u)),u) = outliers; 
+    OUT = logical(OUT);
 
     if strcmpi(datascatter,'on') || strcmpi(outlier_plot,'on') % plot individual data points
         
@@ -398,55 +399,56 @@ for u=1:grouping
     end
     
     %% Bayes bootstrap
-    
-    % sample with replacement from Dirichlet
-    % sampling = number of observations
-    tmp = sort(Data(~isnan(Data(:,u)),u));
-    n   =size(tmp,1); bb = zeros(Nb,1);
-    fprintf('Computing Bayesian Bootstrap for HDI in group %g/%g\n',u,grouping)
-    for boot=1:Nb % bootstrap loop
-        theta    = exprnd(1,[n,1]);
-        weigths  = theta ./ repmat(sum(theta),n,1);
-        resample = (datasample(tmp,n,'Replace',true,'Weights',weigths));
-    
-        % compute the estimator
-        if strcmpi(estimator,'Mean')
-            bb(boot) = nanmean(resample,1);
-        elseif strcmpi(estimator,'Trimmed Mean')
-            bb(boot) = rst_trimmean(resample,trimming);
-        elseif strcmpi(estimator,'Median')
-            bb(boot) = rst_hd(resample,decile);
+    if Nb ~= 0
+        % sample with replacement from Dirichlet
+        % sampling = number of observations
+        tmp = sort(Data(~isnan(Data(:,u)),u));
+        n   =size(tmp,1); bb = zeros(Nb,1);
+        fprintf('Computing Bayesian Bootstrap for HDI in group %g/%g\n',u,grouping)
+        for boot=1:Nb % bootstrap loop
+            theta    = exprnd(1,[n,1]);
+            weigths  = theta ./ repmat(sum(theta),n,1);
+            resample = (datasample(tmp,n,'Replace',true,'Weights',weigths));
+
+            % compute the estimator
+            if strcmpi(estimator,'Mean')
+                bb(boot) = nanmean(resample,1);
+            elseif strcmpi(estimator,'Trimmed Mean')
+                bb(boot) = rst_trimmean(resample,trimming);
+            elseif strcmpi(estimator,'Median')
+                bb(boot) = rst_hd(resample,decile);
+            end
         end
-    end
-    sorted_data   = sort(bb); % sort bootstrap estimates
-    upper_centile = floor(prob_coverage*size(sorted_data,1)); % upper bound
-    nCIs          = size(sorted_data,1) - upper_centile;
-    ci            = 1:nCIs; 
-    ciWidth       = sorted_data(ci+upper_centile) - sorted_data(ci); % all centile distances
-    [~,index]     = find(ciWidth == min(ciWidth)); % densest centile
-    if length(index) > 1 % many similar values
-        index = index(1); 
-    end 
-    HDI(1,u)      = sorted_data(index);
-    HDI(2,u)      = sorted_data(index+upper_centile);
-    
-    % plot this with error bars
-    X = linspace(X(1,1)-within_gp_dispersion, X(1,2)+within_gp_dispersion, 7);   
-    if strcmpi(bars,'off')
-        if strcmpi(bubble,'on')
-            plot(X,repmat(est(u),[1,length(X)]),'LineWidth',4,'Color',[0.5 0.5 0.5]);
-        else
-            plot(X,repmat(est(u),[1,length(X)]),'LineWidth',4,'Color',color_scheme(u,:));
+        sorted_data   = sort(bb); % sort bootstrap estimates
+        upper_centile = floor(prob_coverage*size(sorted_data,1)); % upper bound
+        nCIs          = size(sorted_data,1) - upper_centile;
+        ci            = 1:nCIs;
+        ciWidth       = sorted_data(ci+upper_centile) - sorted_data(ci); % all centile distances
+        [~,index]     = find(ciWidth == min(ciWidth)); % densest centile
+        if length(index) > 1 % many similar values
+            index = index(1);
         end
-    end
-    
-    if strcmpi(kernel_plot,'full')
-        rectangle('Position',[X(1),HDI(1,u),X(7)-X(1),HDI(2,u)-HDI(1,u)],'Curvature',[0.4 0.4],'LineWidth',3,'EdgeColor',color_scheme(u,:))
-    else
-        if strcmpi(bars,'on')  
-            errorbar(X(4),est(u),est(u)-HDI(1,u),HDI(2,u)-est(u),'LineWidth',3,'Color',[0.5 0.5 0.5]);
+        HDI(1,u)      = sorted_data(index);
+        HDI(2,u)      = sorted_data(index+upper_centile);
+
+        % plot this with error bars
+        X = linspace(X(1,1)-within_gp_dispersion, X(1,2)+within_gp_dispersion, 7);
+        if strcmpi(bars,'off')
+            if strcmpi(bubble,'on')
+                plot(X,repmat(est(u),[1,length(X)]),'LineWidth',4,'Color',[0.5 0.5 0.5]);
+            else
+                plot(X,repmat(est(u),[1,length(X)]),'LineWidth',4,'Color',color_scheme(u,:));
+            end
+        end
+
+        if strcmpi(kernel_plot,'full')
+            rectangle('Position',[X(1),HDI(1,u),X(7)-X(1),HDI(2,u)-HDI(1,u)],'Curvature',[0.4 0.4],'LineWidth',3,'EdgeColor',color_scheme(u,:))
         else
-            errorbar(X(4),est(u),est(u)-HDI(1,u),HDI(2,u)-est(u),'CapSize',length(X)*2,'LineWidth',3,'Color',[0.5 0.5 0.5]);
+            if strcmpi(bars,'on')
+                errorbar(X(4),est(u),est(u)-HDI(1,u),HDI(2,u)-est(u),'LineWidth',3,'Color',[0.5 0.5 0.5]);
+            else
+                errorbar(X(4),est(u),est(u)-HDI(1,u),HDI(2,u)-est(u),'CapSize',length(X)*2,'LineWidth',3,'Color',[0.5 0.5 0.5]);
+            end
         end
     end
 end
