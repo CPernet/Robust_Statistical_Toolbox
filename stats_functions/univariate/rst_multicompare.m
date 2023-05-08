@@ -183,9 +183,11 @@ h = h(inverseindex);
 
 %% figures
 
-if strcmpi(newfig,'yes')
+if ~strcmpi(newfig,'no')
     color_scheme = rst_colour_maps(L);
-    figure('Name', 'Pair-wise comparisons');set(gcf,'Color','w')
+    if strcmpi(newfig,'yes')
+        figure('Name', 'Pair-wise comparisons');set(gcf,'Color','w')
+    end
     for i=1:L
         rectangle('Position',[i-0.2,CI(1,i),0.4,CI(2,i)-CI(1,i)],'Curvature',[0.4 0.4],'LineWidth',2,...
             'FaceColor',color_scheme(i,:),'EdgeColor',[0.35 0.35 0.35]); hold on;
