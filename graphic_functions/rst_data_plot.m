@@ -314,13 +314,15 @@ for u=1:grouping
     %% Add the density estimate
     if strcmp(kernel,'on') && sum(tmp) ~=0
         % get the kernel
-        [bc,K]=rst_RASH(tmp,100,dist_method);
+        [bc,k]=rst_RASH(tmp,100,dist_method);
         % remove 0s
-        bc(K==0)=[]; K(K==0)= [];
+        bc(k==0)=[]; k(k==0)= [];
         % create symmetric values
-        K = (K - min(K)) ./ max(K); % normalize to [0 1] interval
-        high=(K/2); low=(-high);
-        
+        k = (k - min(k)) ./ max(k); % normalize to [0 1] interval
+        high=(k/2); low=(-high);
+        % save as output
+        K{u} = k;
+
         % plot contours
         if strcmpi(kernel_plot,'side')
             y1 = plot(high+gp_index(end),bc);

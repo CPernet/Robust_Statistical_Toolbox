@@ -695,7 +695,7 @@ if flag == 2
     [vec, D] = eig((pinv(E)*H));
     [e,ei] = sort(diag(D)); 
     eigen_values = flipud(e);
-    eigen_vectors  = vec(:,flipud(ei));
+    % eigen_vectors  = vec(:,flipud(ei));
 
     p = size(Y,2); % = number of variables (dimension)
     vh = nb_gp - 1; % df = q above
@@ -709,17 +709,17 @@ if flag == 2
     if s > 1
         m = (abs(vh-p)-1)/2;
         N = (ve-p-1) / 2;
-        U = sum(Eigen_values);
+        U = sum(eigen_values);
         df_Hotelling = s*(2*m+s+1);
         dfe_Hotelling = 2*(s*N+1);
         F = (dfe_Hotelling*U) / (s^2*(2*m+s+1));
         p = 1-fcdf(F, df_Hotelling, dfe_Hotelling);
         df = df_Hotelling; dfe = dfe_Hotelling;
     else % = only one non zeros Eigen value s = 1 and/or vh = 1
-        U = max(Eigen_values);
+        U = max(eigen_values);
         df_Hotelling = p;
         dfe_Hotelling = ve-p+1;
-        F = (dfe_Hotelling/df_Hotelling) * max(Eigen_values);
+        F = (dfe_Hotelling/df_Hotelling) * max(eigen_values);
         p = 1-fcdf(F,df_Hotelling,dfe_Hotelling);
     end
 else
