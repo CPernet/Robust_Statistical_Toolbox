@@ -14,6 +14,10 @@ function [RGB]=rst_colour_maps(N_colours)
 % Cyril Pernet - RST toolbox
 % ---------------------------
 
+if N_colours >256
+    error('oops looks like you are looking for two many different colors, consider using a gradient')
+end
+
 if N_colours <= 11
     
     % colorbrewer = [166  206 227
